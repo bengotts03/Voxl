@@ -27,10 +27,8 @@ void VoxelWorld::Init() {
         for (int z = -HALF_WORLD_SIZE; z < HALF_WORLD_SIZE; ++z) {
             auto chunk = std::make_unique<VoxelChunk>();
             chunk->GenerateTerrain(GetWorldNoise({glm::ivec3(x, 0, z)}));
-            chunk->Position = glm::vec3(x * CHUNK_SIZE * VOXEL_SIZE, 0, z * CHUNK_SIZE * VOXEL_SIZE);
-
-            chunk->CreateMesh(true, true, true, true);
-            chunk->SetLoaded(true);
+            chunk->Position = glm::vec3(static_cast<float>(x) * CHUNK_SIZE * VOXEL_SIZE, 0, static_cast<float>(z) * CHUNK_SIZE * VOXEL_SIZE);
+            chunk->CreateMesh();
 
             auto key = VoxelChunkKey(x, z);
             _chunks[key] = std::move(chunk);
@@ -50,9 +48,7 @@ void VoxelWorld::RebuildChunks() {
     // ToDo: Will need a better implementation once we have dynamic loading
     for (auto& [key, chunk] : _chunks) {
         if (chunk->IsFlaggedForRebuild()) {
-            std::tuple<bool, bool, bool, bool> chunkNeighbours = CalculateChunkBoundaries(key);
-            chunk->CreateMesh(std::get<0>(chunkNeighbours), std::get<1>(chunkNeighbours),
-                              std::get<2>(chunkNeighbours), std::get<3>(chunkNeighbours));
+            chunk->CreateMesh();
             chunk->SetFlaggedForRebuild(false);
         }
     }
@@ -62,30 +58,40 @@ void VoxelWorld::RenderWorldAsync() {
     // ToDo: Will need a better implementation once we have dynamic loading
     for (auto& [key, chunk] : _chunks) {
         chunk->Update(1);
-        chunk->Render(_shader, _camera);
+
+        if (chunk->ShouldRender()) {
+            chunk->Render(_shader, _camera);
+        }
     }
 }
 
-std::tuple<bool, bool, bool, bool> VoxelWorld::CalculateChunkBoundaries(VoxelChunkKey chunkKey) {
-    auto currentChunk = _chunks[chunkKey].get();
+Neighbours VoxelWorld::CalculateChunkNeighbours(VoxelChunkKey chunkKey) {
+    auto currentChunk = GetChunk(chunkKey);
 
-    int x = currentChunk->Position.x;
-    int z = currentChunk->Position.z;
+    if (currentChunk == nullptr)
+        return {};
+
+    int x = static_cast<int>(currentChunk->Position.x);
+    int z = static_cast<int>(currentChunk->Position.z);
+
+    auto xNegChunk = GetChunk(VoxelChunkKey{x - 1, z});
+    auto xPosChunk = GetChunk(VoxelChunkKey{x + 1, z});
+    auto zNegChunk = GetChunk(VoxelChunkKey{x, z - 1});
+    auto zPosChunk = GetChunk(VoxelChunkKey{x, z + 1});
 
     bool xNegative = true;
     bool xPositive = true;
     bool zNegative = true;
     bool zPositive = true;
 
-    if (x > -HALF_WORLD_SIZE)
-        xNegative = _chunks[{x - 1, z}] && !_chunks[{x - 1, z}]->IsLoaded();
-    if (x < HALF_WORLD_SIZE - 1)
-        xPositive = _chunks[{x + 1, z}] && !_chunks[{x + 1, z}]->IsLoaded();
-
-    if (z > -HALF_WORLD_SIZE)
-        zNegative = _chunks[{x, z - 1}] && !_chunks[{x, z - 1}]->IsLoaded();
-    if (z < HALF_WORLD_SIZE - 1)
-        zPositive = _chunks[{x, z + 1}] && !_chunks[{x, z + 1}]->IsLoaded();
+    if (xNegChunk == nullptr)
+        xNegative = false;
+    if (xPosChunk == nullptr)
+        xPositive = false;
+    if (zNegChunk == nullptr)
+        zNegative = false;
+    if (zPosChunk == nullptr)
+        zPositive = false;
 
     return {xNegative, xPositive, zNegative, zPositive};
 }
@@ -157,13 +163,34 @@ bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outH
     return false;
 }
 
-VoxelChunk* VoxelWorld::GetChunk(WorldPosition position) {
-    auto chunkPos = WorldPositionToChunk(position);
+VoxelChunk* VoxelWorld::GetChunk(WorldPosition worldPosition) {
+    auto chunkPos = WorldPositionToChunk(worldPosition);
 
     const int chunkXPos = chunkPos.Position.x;
     const int chunkZPos = chunkPos.Position.z;
 
     auto key = VoxelChunkKey(chunkXPos, chunkZPos);
+    auto iterator = _chunks.find(key);
+
+    if (iterator != _chunks.end()) {
+        return iterator->second.get();
+    }
+
+    return nullptr;
+}
+
+VoxelChunk* VoxelWorld::GetChunk(ChunkPosition chunkPosition) {
+    auto key = VoxelChunkKey(chunkPosition.Position.x, chunkPosition.Position.z);
+    auto iterator = _chunks.find(key);
+
+    if (iterator != _chunks.end()) {
+        return iterator->second.get();
+    }
+
+    return nullptr;
+}
+
+VoxelChunk* VoxelWorld::GetChunk(VoxelChunkKey key) {
     auto iterator = _chunks.find(key);
 
     if (iterator != _chunks.end()) {
@@ -198,7 +225,6 @@ bool VoxelWorld::DestroyVoxelBlock(WorldPosition worldPosition) {
     if (chunk) {
         auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition));
         if (voxel->IsActive() == true) {
-
             voxel->SetActive(false);
             chunk->SetFlaggedForRebuild(true);
 

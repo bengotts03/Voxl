@@ -4,6 +4,8 @@
 
 #define WORLD_SIZE (int)6
 #define HALF_WORLD_SIZE (WORLD_SIZE / 2)
+#include <tuple>
+#include <tuple>
 
 #ifndef VOXELWORLD_H
 #define VOXELWORLD_H
@@ -36,28 +38,34 @@ struct VoxelChunkKeyHash {
     }
 };
 
+struct Neighbours {
+    bool xNeg;
+    bool xPos;
+    bool zNeg;
+    bool zPos;
+};
 
 class VoxelChunk;
-
 class VoxelWorld {
 public:
     VoxelWorld(Shader& shader, Camera& camera);
     VoxelWorld(Shader& shader, Camera& camera, int seed);
     ~VoxelWorld();
 
-
     void Init();
     void Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView);
 
     void RebuildChunks();
     void RenderWorldAsync();
-    std::tuple<bool, bool, bool, bool> CalculateChunkBoundaries(VoxelChunkKey chunkKey);
+    Neighbours CalculateChunkNeighbours(VoxelChunkKey chunkKey);
 
     float* GetWorldNoise(ChunkPosition chunkPosition);
 
     bool Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance = 100.0f);
 
-    VoxelChunk* GetChunk(WorldPosition position);
+    VoxelChunk* GetChunk(WorldPosition worldPosition);
+    VoxelChunk* GetChunk(ChunkPosition chunkPosition);
+    VoxelChunk* GetChunk(VoxelChunkKey key);
 
     bool PlaceVoxelBlock(WorldPosition worldPosition);
     bool DestroyVoxelBlock(WorldPosition worldPosition);

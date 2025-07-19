@@ -95,3 +95,11 @@ void Mesh::DrawViewProj(Shader &shader, Camera &camera) {
 
     glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
 }
+
+int Mesh::GetNumVerts() const {
+    return static_cast<int>(_vertices.size());
+}
+
+int Mesh::GetNumIndices() const {
+    return static_cast<int>(_indices.size());
+}

@@ -18,6 +18,9 @@ public:
     void Draw(Shader& shader, Camera& camera);
     void DrawViewProj(Shader& shader, Camera& camera);
 
+    int GetNumVerts() const;
+    int GetNumIndices() const;
+
     glm::vec3 Position = glm::vec3(0, 0, 0);
 private:
     std::vector<Vertex> _vertices;

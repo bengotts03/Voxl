@@ -16,6 +16,13 @@
 #include "VoxelBlock.h"
 #include "VoxelPositioning.h"
 
+enum Orientation {
+    PositiveX,
+    NegativeX,
+    PositiveZ,
+    NegativeZ
+};
+
 class VoxelChunk {
 public:
     VoxelChunk();
@@ -24,11 +31,12 @@ public:
     void Setup();
     void Update(float deltaTime);
     void Render(Shader& shader, Camera& camera);
+    bool ShouldRender();
 
     void GenerateTerrain(float heightMap[CHUNK_SIZE * CHUNK_SIZE]);
 
     void CreateVoxel(glm::vec3 position, glm::vec3 colour, bool xNeg, bool xPos, bool yNeg, bool yPos, bool zNeg, bool zPos);
-    void CreateMesh(bool xNeg, bool xPos, bool zNeg, bool zPos);
+    void CreateMesh();
 
     VoxelBlock* GetVoxelBlock(WorldPosition worldPosition);
     VoxelBlock* GetVoxelBlock(ChunkPosition chunkPosition);
@@ -52,7 +60,8 @@ private:
     std::vector<Texture> _meshTextures;
 
     bool _isFlaggedForRebuild = false;
-    bool _isLoaded = false;
+    bool _isLoaded = true;
+    bool _isEmpty = false;
 };
 
 #endif //VOXELCHUNK_H

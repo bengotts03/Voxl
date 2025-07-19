@@ -19,7 +19,7 @@ VoxelChunk::VoxelChunk() {
             _blocks[x][y].resize(CHUNK_SIZE);
 
             for (int z = 0; z < CHUNK_SIZE; ++z) {
-                _blocks[x][y][z] = std::make_unique<VoxelBlock>();
+                _blocks[x][y][z] = std::make_unique<VoxelBlock>(BLOCK_TYPE_STONE);
             }
         }
     }
@@ -37,6 +37,11 @@ void VoxelChunk::Update(float deltaTime) {
         return;
 
     _chunkMesh->Position = Position;
+
+    if (_chunkMesh->GetNumVerts() == 0 && _chunkMesh->GetNumIndices() == 0)
+        _isEmpty = true;
+    else
+        _isEmpty = false;
 }
 
 void VoxelChunk::Render(Shader& shader, Camera& camera) {
@@ -45,6 +50,10 @@ void VoxelChunk::Render(Shader& shader, Camera& camera) {
 
     shader.SetFloat("scale", VOXEL_SIZE);
     _chunkMesh->Draw(shader, camera);
+}
+
+bool VoxelChunk::ShouldRender() {
+    return !_isEmpty;
 }
 
 // Todo: Might be good to cache the terrain data for loading and then have a separate method for loading which the VoxelWorld class
@@ -56,7 +65,13 @@ void VoxelChunk::GenerateTerrain(float heightMap[CHUNK_SIZE * CHUNK_SIZE]) {
             int height = int(normalizedHeight * CHUNK_SIZE);
 
             for (int y = 0; y < height; y++) {
-                _blocks[x][y][z]->SetActive(true);
+                auto currentBlock = _blocks[x][y][z].get();
+                currentBlock->SetActive(true);
+
+                if (y < height && y > height / 2)
+                    currentBlock->SetBlockType(BLOCK_TYPE_DIRT);
+                if (y == height - 1)
+                    currentBlock->SetBlockType(BLOCK_TYPE_GRASS);
             }
         }
     }
@@ -166,7 +181,7 @@ void VoxelChunk::CreateVoxel(glm::vec3 position, glm::vec3 colour, bool xNeg, bo
     _meshIndices.insert(_meshIndices.end(), offsetIndices.begin(), offsetIndices.end());
 }
 
-void VoxelChunk::CreateMesh(bool xNeg, bool xPos, bool zNeg, bool zPos) {
+void VoxelChunk::CreateMesh() {
     _meshVertices.clear();
     _meshIndices.clear();
     _meshTextures.clear();
@@ -175,17 +190,6 @@ void VoxelChunk::CreateMesh(bool xNeg, bool xPos, bool zNeg, bool zPos) {
         for (int y = 0; y < CHUNK_SIZE; ++y) {
             for (int z = 0; z < CHUNK_SIZE; ++z) {
                 if (_blocks[x][y][z]->IsActive() == false)
-                    continue;
-
-                bool isNotTopVoxel = _blocks[x][y + 1][z]->IsActive();
-
-                if (!xNeg && x == 0 && isNotTopVoxel)
-                    continue;
-                if (!xPos && x == CHUNK_SIZE - 1)
-                    continue;
-                if (!zNeg && z == 0 && isNotTopVoxel)
-                    continue;
-                if (!zPos && z == CHUNK_SIZE - 1)
                     continue;
 
                 bool xNegative = true;
@@ -210,7 +214,7 @@ void VoxelChunk::CreateMesh(bool xNeg, bool xPos, bool zNeg, bool zPos) {
                 if (z < CHUNK_SIZE - 1)
                     zPositive = !_blocks[x][y][z + 1]->IsActive();
 
-                CreateVoxel(glm::vec3(x,y,z), {x, y, z}, xNegative, xPositive, yNegative,
+                CreateVoxel(glm::vec3(x,y,z), _blocks[x][y][z]->GetBlockColour(), xNegative, xPositive, yNegative,
                     yPositive, zNegative, zPositive);
             }
         }

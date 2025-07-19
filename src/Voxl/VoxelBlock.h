@@ -5,20 +5,27 @@
 #ifndef VOXELBLOCK_H
 #define VOXELBLOCK_H
 
+#include "glm/glm.hpp"
+
 enum VoxelBlockType {
-    Default,
-    Grass,
-    Dirt,
-    Stone
+    BLOCK_TYPE_DEFAULT,
+    BLOCK_TYPE_GRASS,
+    BLOCK_TYPE_DIRT,
+    BLOCK_TYPE_STONE
 };
 
 class VoxelBlock {
 public:
-    VoxelBlock(VoxelBlockType blockType = Default);
+    VoxelBlock(VoxelBlockType blockType = BLOCK_TYPE_GRASS);
     ~VoxelBlock();
 
     bool IsActive();
     void SetActive(bool val);
+
+    bool GetBlockType();
+    void SetBlockType(VoxelBlockType val);
+
+    glm::vec3 GetBlockColour();
 private:
     bool _isActive;
     VoxelBlockType _blockType;
