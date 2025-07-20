@@ -20,6 +20,7 @@ class Camera {
 public:
     Camera(int width, int height, glm::vec3 pos);
 
+    void Refresh(int width, int height);
     // Sends matrix data to the vertex shader
     void CalculateMatrix(Shader& shader, const char* uniform);
     // Updates the cameras matrix
@@ -28,8 +29,6 @@ public:
     glm::mat4 GetProjection();
 
     void HandleInput(GLFWwindow* window);
-
-    bool Raycast();
 
     glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 Direction = glm::vec3(0.0f, 0.0f, -1.0f);

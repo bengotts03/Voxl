@@ -8,15 +8,16 @@
 #include "Core/Mesh.h"
 #include "Core/Texture.h"
 #include "Core/VertexBuffer.h"
-#include "Voxl/VoxelChunk.h"
 #include "Voxl/VoxelWorld.h"
 
 GLFWwindow* window;
 const unsigned int width = 800;
 const unsigned int height = 800;
+Camera* camera;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+    camera->Refresh(width, height);
 }
 
 int main() {
@@ -43,10 +44,10 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
 
     auto shader = Shader("../assets/shaders/default.vert", "../assets/shaders/default.frag");
-    Camera camera(width, height, glm::vec3(0, 0, -2));
+    camera = new Camera(width, height, glm::vec3(0, 0, -2));
 
     auto skyboxShader = Shader("../assets/shaders/skybox.vert", "../assets/shaders/skybox.frag");
     Vertex skyboxVertices[] = {
@@ -111,7 +112,7 @@ int main() {
     std::vector<Texture> skyboxTex;
     Mesh skybox(skyboxVerts, skyboxInds, skyboxTex);
 
-    VoxelWorld world(shader, camera, 0);
+    VoxelWorld world(shader, *camera, 0);
 
     double curTime = 0.0;
     double prevTime = 0.0;
@@ -138,7 +139,7 @@ int main() {
             prevTime = curTime;
             fpsCounter = 0;
 
-            camera.HandleInput(window);
+            camera->HandleInput(window);
         }
 
         glClearColor(0.0, 0.2, 0.3, 1.0);
@@ -146,15 +147,15 @@ int main() {
 
         int newState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
         if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
-            RaycastHit outHit{};
-            if (world.Raycast(camera.Position, camera.Direction, outHit)) {
-                world.DestroyVoxelBlock(outHit.WorldPositionHit);
-                // world.PlaceVoxelBlock(outHit.WorldPositionHit);
-            }
+            // RaycastHit outHit{};
+            // if (world.Raycast(camera->Position, camera->Direction, outHit)) {
+            //     world.DestroyVoxelBlock(outHit.WorldPositionHit);
+            //     // world.PlaceVoxelBlock(outHit.WorldPositionHit);
+            // }
         }
         oldState = newState;
 
-        camera.UpdateMatrix(90.0f, 0.1f, 100.0f);
+        camera->UpdateMatrix(90.0f, 0.1f, 100.0f);
 
         // SKYBOX
         // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -163,7 +164,7 @@ int main() {
         glCullFace(GL_FRONT);
 
         skyboxShader.Activate();
-        skybox.DrawViewProj(skyboxShader, camera);
+        skybox.DrawViewProj(skyboxShader, *camera);
 
         glCullFace(GL_BACK);
         glDepthMask(GL_TRUE);
@@ -173,7 +174,7 @@ int main() {
         shader.Activate();
 
         // TODO: camera.Direction will need to be changed
-        world.Update(curTime / 1.0f, camera.Position, camera.Direction);
+        world.Update(curTime / 1.0f, camera->Position, camera->Direction);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

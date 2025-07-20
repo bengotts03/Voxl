@@ -14,6 +14,10 @@
  */
 struct WorldPosition {
     glm::vec3 Position;
+
+    WorldPosition();
+    WorldPosition(glm::vec3 pos) : Position(pos){}
+    WorldPosition(float x, float y, float z) : Position(glm::vec3(x, y, z)){}
 };
 
 /**
@@ -25,6 +29,10 @@ struct WorldPosition {
  */
 struct ChunkPosition {
     glm::ivec3 Position;
+
+    ChunkPosition();
+    ChunkPosition(glm::ivec3 pos) : Position(pos){}
+    ChunkPosition(int x, int y, int z) : Position(glm::ivec3(x, y, z)){}
 };
 
 /**
@@ -48,7 +56,8 @@ struct LocalVoxelPosition {
 };
 
 static ChunkPosition WorldPositionToChunk(WorldPosition worldPosition) {
-    glm::ivec3 chunk = glm::ivec3(glm::floor(worldPosition.Position / (float)CHUNK_SIZE));
+    glm::vec3 scaledPos = worldPosition.Position / VOXEL_SIZE;
+    glm::ivec3 chunk = glm::ivec3(glm::floor(scaledPos / (float)CHUNK_SIZE));
 
     return {chunk};
 }

@@ -20,7 +20,12 @@ glm::mat4 Camera::GetProjection() {
     float nearPane = 0.01f;
     float farPane = 100.0f;
 
-    return glm::perspective(glm::radians(FOV), (float) _width / (float) _height, nearPane, farPane);
+    return glm::perspective(glm::radians(FOV), (float)_width / (float)_height, nearPane, farPane);
+}
+
+void Camera::Refresh(int width, int height) {
+    _width = static_cast<float>(width);
+    _height = static_cast<float>(height);
 }
 
 void Camera::UpdateMatrix(float FOV, float nearPane, float farPane) {

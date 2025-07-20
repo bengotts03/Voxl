@@ -30,6 +30,10 @@ public:
 
     void Setup();
     void Update(float deltaTime);
+
+    void Load();
+    void Unload();
+
     void Render(Shader& shader, Camera& camera);
     bool ShouldRender();
 
@@ -50,10 +54,15 @@ public:
     bool IsLoaded();
     void SetLoaded(bool val);
 
-    glm::vec3 Position = glm::vec3(0, 0, 0);
+    WorldPosition GetWorldPosition();
+    void SetWorldPosition(WorldPosition val);
+    ChunkPosition GetChunkPosition();
+    void SetChunkPosition(ChunkPosition val);
 private:
     std::vector<std::vector<std::vector<std::unique_ptr<VoxelBlock>>>> _blocks;
     Mesh* _chunkMesh;
+    WorldPosition _worldPosition = WorldPosition{0, 0, 0};
+    ChunkPosition _chunkPosition = ChunkPosition{0, 0, 0};
 
     std::vector<Vertex> _meshVertices;
     std::vector<GLuint> _meshIndices;

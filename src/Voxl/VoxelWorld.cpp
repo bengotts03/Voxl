@@ -23,31 +23,40 @@ VoxelWorld::~VoxelWorld() {
 void VoxelWorld::Init() {
     _chunks.clear();
 
-    for (int x = -HALF_WORLD_SIZE; x < HALF_WORLD_SIZE; ++x) {
-        for (int z = -HALF_WORLD_SIZE; z < HALF_WORLD_SIZE; ++z) {
-            auto chunk = std::make_unique<VoxelChunk>();
-            chunk->GenerateTerrain(GetWorldNoise({glm::ivec3(x, 0, z)}));
-            chunk->Position = glm::vec3(static_cast<float>(x) * CHUNK_SIZE * VOXEL_SIZE, 0, static_cast<float>(z) * CHUNK_SIZE * VOXEL_SIZE);
-            chunk->CreateMesh();
+    // _visibleChunksWithinViewDistance = static_cast<int>(_maxViewDistance / CHUNK_SIZE);
+    // spdlog::info("View Dist: {0}", _visibleChunksWithinViewDistance);
 
-            auto key = VoxelChunkKey(x, z);
-            _chunks[key] = std::move(chunk);
-        }
-    }
+    _camera.Position = glm::vec3(static_cast<float>(-2) * CHUNK_SIZE * VOXEL_SIZE,
+                                 0,
+                                 static_cast<float>(1) * CHUNK_SIZE * VOXEL_SIZE);
+
+    // for (int x = -HALF_WORLD_SIZE; x < HALF_WORLD_SIZE; ++x) {
+    //     for (int z = -HALF_WORLD_SIZE; z < HALF_WORLD_SIZE; ++z) {
+    //         auto chunk = std::make_unique<VoxelChunk>();
+    //         chunk->GenerateTerrain(GetWorldNoise({glm::ivec3(x, 0, z)}));
+    //         chunk->SetWorldPosition(glm::vec3(static_cast<float>(x) * CHUNK_SIZE * VOXEL_SIZE, 0, static_cast<float>(z) * CHUNK_SIZE * VOXEL_SIZE));
+    //         chunk->Load();
+    //
+    //         auto key = VoxelChunkKey(x, z);
+    //         _chunks[key] = std::move(chunk);
+    //     }
+    // }
 }
 
 void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView) {
     RenderWorldAsync();
+    UpdateVisibleChunks();
     RebuildChunks();
 
     _cameraPosition = cameraPosition;
     _cameraView = cameraView;
 }
 
+
 void VoxelWorld::RebuildChunks() {
     // ToDo: Will need a better implementation once we have dynamic loading
-    for (auto& [key, chunk] : _chunks) {
-        if (chunk->IsFlaggedForRebuild()) {
+    for (auto& [key, chunk] : _visibleChunks) {
+        if (chunk->IsFlaggedForRebuild() && chunk->ShouldRender()) {
             chunk->CreateMesh();
             chunk->SetFlaggedForRebuild(false);
         }
@@ -56,7 +65,7 @@ void VoxelWorld::RebuildChunks() {
 
 void VoxelWorld::RenderWorldAsync() {
     // ToDo: Will need a better implementation once we have dynamic loading
-    for (auto& [key, chunk] : _chunks) {
+    for (auto& [key, chunk] : _visibleChunks) {
         chunk->Update(1);
 
         if (chunk->ShouldRender()) {
@@ -65,35 +74,71 @@ void VoxelWorld::RenderWorldAsync() {
     }
 }
 
-Neighbours VoxelWorld::CalculateChunkNeighbours(VoxelChunkKey chunkKey) {
-    auto currentChunk = GetChunk(chunkKey);
+float VoxelWorld::CalculateDistanceToChunkBounds(const ChunkPosition& chunkPos) const {
+    // Convert chunk coordinates to world coordinates
+    glm::vec3 chunkWorldPos = glm::vec3(
+        static_cast<float>(chunkPos.Position.x) * CHUNK_SIZE * VOXEL_SIZE,
+        0,
+        static_cast<float>(chunkPos.Position.z) * CHUNK_SIZE * VOXEL_SIZE
+    );
 
-    if (currentChunk == nullptr)
-        return {};
+    glm::vec3 boundsMin = chunkWorldPos;
+    glm::vec3 boundsMax = chunkWorldPos + glm::vec3(CHUNK_SIZE * VOXEL_SIZE, 0, CHUNK_SIZE * VOXEL_SIZE);
 
-    int x = static_cast<int>(currentChunk->Position.x);
-    int z = static_cast<int>(currentChunk->Position.z);
+    float clampedX = glm::clamp(_cameraPosition.x, boundsMin.x, boundsMax.x);
+    float clampedZ = glm::clamp(_cameraPosition.z, boundsMin.z, boundsMax.z);
 
-    auto xNegChunk = GetChunk(VoxelChunkKey{x - 1, z});
-    auto xPosChunk = GetChunk(VoxelChunkKey{x + 1, z});
-    auto zNegChunk = GetChunk(VoxelChunkKey{x, z - 1});
-    auto zPosChunk = GetChunk(VoxelChunkKey{x, z + 1});
+    float dx = _cameraPosition.x - clampedX;
+    float dz = _cameraPosition.z - clampedZ;
 
-    bool xNegative = true;
-    bool xPositive = true;
-    bool zNegative = true;
-    bool zPositive = true;
+    return glm::sqrt(dx * dx + dz * dz);
+}
 
-    if (xNegChunk == nullptr)
-        xNegative = false;
-    if (xPosChunk == nullptr)
-        xPositive = false;
-    if (zNegChunk == nullptr)
-        zNegative = false;
-    if (zPosChunk == nullptr)
-        zPositive = false;
+void VoxelWorld::UpdateVisibleChunks() {
+    auto currentPositionInWorld = WorldPosition{_cameraPosition};
+    auto currentChunkPosition = WorldPositionToChunk(currentPositionInWorld);
 
-    return {xNegative, xPositive, zNegative, zPositive};
+    auto previouslyVisibleChunks = std::move(_visibleChunks);
+    _visibleChunks.clear();
+
+    for (int z = -_chunkViewDistance; z < _chunkViewDistance; ++z) {
+        for (int x = -_chunkViewDistance; x < _chunkViewDistance; ++x) {
+            auto viewedChunkPosition = ChunkPosition(currentChunkPosition.Position.x + x, 0, currentChunkPosition.Position.z + z);
+            VoxelChunkKey viewedChunkKey{viewedChunkPosition.Position.x, viewedChunkPosition.Position.z};
+
+            float chunkDistance = std::sqrt(static_cast<float>(x * x + z * z));
+            bool isVisible = chunkDistance <= static_cast<float>(_chunkViewDistance);
+
+            if (isVisible) {
+                if (_chunks.contains(viewedChunkKey)) {
+                    auto& chunk = _chunks[viewedChunkKey];
+
+                    if (!chunk->IsLoaded())
+                        chunk->Load();
+
+                    _visibleChunks[viewedChunkKey] = chunk.get();
+                }
+                else {
+                    auto chunk = std::make_unique<VoxelChunk>();
+                    chunk->GenerateTerrain(GetWorldNoise(viewedChunkPosition));
+                    chunk->SetWorldPosition(glm::vec3(static_cast<float>(viewedChunkPosition.Position.x) * CHUNK_SIZE * VOXEL_SIZE,
+                                                0,
+                                                static_cast<float>(viewedChunkPosition.Position.z) * CHUNK_SIZE * VOXEL_SIZE));
+                    chunk->Load();
+
+                    // Gives a pointer of the chunk to our visibles tracker
+                    _visibleChunks[viewedChunkKey] = chunk.get();
+                    // Registers the chunk
+                    _chunks[viewedChunkKey] = std::move(chunk);
+                }
+            }
+        }
+    }
+
+    for (auto& [key, chunk] : previouslyVisibleChunks) {
+        if (!_visibleChunks.contains(key) && chunk->IsLoaded())
+            chunk->Unload();
+    }
 }
 
 float* VoxelWorld::GetWorldNoise(ChunkPosition chunkPosition) {
@@ -187,6 +232,7 @@ VoxelChunk* VoxelWorld::GetChunk(ChunkPosition chunkPosition) {
         return iterator->second.get();
     }
 
+    spdlog::warn("Chunk not found at: {0},{1}", chunkPosition.Position.x, chunkPosition.Position.z);
     return nullptr;
 }
 

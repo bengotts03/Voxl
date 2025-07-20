@@ -17,10 +17,10 @@
 #include "VoxelPositioning.h"
 
 struct RaycastHit {
-    WorldPosition WorldPositionHit;
-    ChunkPosition ChunkPositionHit;
-    VoxelPosition VoxelPositionHit;
-    LocalVoxelPosition LocalVoxelPositionHit;
+    WorldPosition WorldPositionHit{};
+    ChunkPosition ChunkPositionHit{};
+    VoxelPosition VoxelPositionHit{};
+    LocalVoxelPosition LocalVoxelPositionHit{};
 };
 
 struct VoxelChunkKey {
@@ -55,9 +55,10 @@ public:
     void Init();
     void Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView);
 
+    float CalculateDistanceToChunkBounds(const ChunkPosition& chunkPosition) const;
+    void UpdateVisibleChunks();
     void RebuildChunks();
     void RenderWorldAsync();
-    Neighbours CalculateChunkNeighbours(VoxelChunkKey chunkKey);
 
     float* GetWorldNoise(ChunkPosition chunkPosition);
 
@@ -72,6 +73,7 @@ public:
 private:
     // std::vector<std::unique_ptr<VoxelChunk>> _chunks;
     std::unordered_map<VoxelChunkKey, std::unique_ptr<VoxelChunk>, VoxelChunkKeyHash> _chunks;
+    std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _visibleChunks;
 
     glm::vec3 _cameraPosition = glm::vec3(-1.0f, -1.0f, -1.0f);
     glm::vec3 _cameraView = glm::vec3(-1.0f, -1.0f, -1.0f);
@@ -80,6 +82,8 @@ private:
     Camera& _camera;
 
     int _worldSeed = 0;
+
+    const float _chunkViewDistance = 4;
 };
 
 #endif //VOXELWORLD_H

@@ -10,6 +10,13 @@
 #include "random"
 
 VoxelChunk::VoxelChunk() {
+    Setup();
+}
+
+VoxelChunk::~VoxelChunk() {
+}
+
+void VoxelChunk::Setup() {
     _blocks.resize(CHUNK_SIZE);
 
     for (int x = 0; x < CHUNK_SIZE; ++x) {
@@ -25,23 +32,32 @@ VoxelChunk::VoxelChunk() {
     }
 }
 
-VoxelChunk::~VoxelChunk() {
-}
-
-void VoxelChunk::Setup() {
-
-}
-
 void VoxelChunk::Update(float deltaTime) {
     if (!IsLoaded())
         return;
 
-    _chunkMesh->Position = Position;
+    _chunkMesh->Position = _worldPosition.Position;
 
-    if (_chunkMesh->GetNumVerts() == 0 && _chunkMesh->GetNumIndices() == 0)
-        _isEmpty = true;
-    else
-        _isEmpty = false;
+    _isEmpty = _chunkMesh->GetNumVerts() == 0 && _chunkMesh->GetNumIndices() == 0;
+}
+
+void VoxelChunk::Load() {
+    CreateMesh();
+
+    _isLoaded = true;
+    spdlog::info("Loading Chunk: {0},{1}", _worldPosition.Position.x, _worldPosition.Position.z);
+}
+
+void VoxelChunk::Unload() {
+    if (!_isLoaded) {
+        spdlog::warn("Trying to unload chunk that isnt loaded");
+        return;
+    }
+
+    _isLoaded = false;
+    delete _chunkMesh;
+
+    spdlog::info("Unloading Chunk: {0},{1}", _worldPosition.Position.x, _worldPosition.Position.z);
 }
 
 void VoxelChunk::Render(Shader& shader, Camera& camera) {
@@ -53,7 +69,7 @@ void VoxelChunk::Render(Shader& shader, Camera& camera) {
 }
 
 bool VoxelChunk::ShouldRender() {
-    return !_isEmpty;
+    return !_isEmpty && _isLoaded;
 }
 
 // Todo: Might be good to cache the terrain data for loading and then have a separate method for loading which the VoxelWorld class
@@ -72,6 +88,10 @@ void VoxelChunk::GenerateTerrain(float heightMap[CHUNK_SIZE * CHUNK_SIZE]) {
                     currentBlock->SetBlockType(BLOCK_TYPE_DIRT);
                 if (y == height - 1)
                     currentBlock->SetBlockType(BLOCK_TYPE_GRASS);
+
+                // Debug Chunk Borders
+                if (x == 0 || z == 0 || x == CHUNK_SIZE - 1 || z == CHUNK_SIZE - 1)
+                    currentBlock->SetBlockType(BLOCK_TYPE_DEFAULT);
             }
         }
     }
@@ -267,10 +287,26 @@ void VoxelChunk::SetFlaggedForRebuild(bool val) {
 }
 
 bool VoxelChunk::IsLoaded() {
-    return _isLoaded && _chunkMesh != nullptr;
+    return _isLoaded;
 }
 
 void VoxelChunk::SetLoaded(bool val) {
     _isLoaded = val;
 }
 
+WorldPosition VoxelChunk::GetWorldPosition() {
+    return _worldPosition;
+}
+
+void VoxelChunk::SetWorldPosition(WorldPosition val) {
+    _worldPosition = val;
+}
+
+ChunkPosition VoxelChunk::GetChunkPosition() {
+    _chunkPosition = WorldPositionToChunk(_worldPosition);
+    return _chunkPosition;
+}
+
+void VoxelChunk::SetChunkPosition(ChunkPosition val) {
+    _chunkPosition = val;
+}
