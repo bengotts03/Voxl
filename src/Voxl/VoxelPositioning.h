@@ -15,7 +15,7 @@
 struct WorldPosition {
     glm::vec3 Position;
 
-    WorldPosition();
+    WorldPosition() : Position(0, 0, 0){}
     WorldPosition(glm::vec3 pos) : Position(pos){}
     WorldPosition(float x, float y, float z) : Position(glm::vec3(x, y, z)){}
 };
@@ -30,7 +30,7 @@ struct WorldPosition {
 struct ChunkPosition {
     glm::ivec3 Position;
 
-    ChunkPosition();
+    ChunkPosition() : Position(0, 0, 0){}
     ChunkPosition(glm::ivec3 pos) : Position(pos){}
     ChunkPosition(int x, int y, int z) : Position(glm::ivec3(x, y, z)){}
 };

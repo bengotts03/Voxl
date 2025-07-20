@@ -147,11 +147,11 @@ int main() {
 
         int newState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
         if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
-            // RaycastHit outHit{};
-            // if (world.Raycast(camera->Position, camera->Direction, outHit)) {
-            //     world.DestroyVoxelBlock(outHit.WorldPositionHit);
-            //     // world.PlaceVoxelBlock(outHit.WorldPositionHit);
-            // }
+            RaycastHit outHit{};
+            if (world.Raycast(camera->Position, camera->Direction, outHit)) {
+                world.DestroyVoxelBlock(outHit.WorldPositionHit);
+                // world.PlaceVoxelBlock(outHit.WorldPositionHit);
+            }
         }
         oldState = newState;
 
