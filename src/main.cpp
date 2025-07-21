@@ -149,8 +149,11 @@ int main() {
         if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
             RaycastHit outHit{};
             if (world.Raycast(camera->Position, camera->Direction, outHit)) {
+                spdlog::info("Hit: {0},{1},{2}", outHit.WorldPositionHit.Position.x, outHit.WorldPositionHit.Position.y, outHit.WorldPositionHit.Position.z);
                 world.DestroyVoxelBlock(outHit.WorldPositionHit);
                 // world.PlaceVoxelBlock(outHit.WorldPositionHit);
+            }else {
+                spdlog::info("Hit nothing");
             }
         }
         oldState = newState;

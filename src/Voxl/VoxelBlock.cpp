@@ -18,7 +18,7 @@ void VoxelBlock::SetActive(bool val) {
         _isActive = val;
 }
 
-bool VoxelBlock::GetBlockType() {
+VoxelBlockType VoxelBlock::GetBlockType() {
     return _blockType;
 }
 

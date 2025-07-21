@@ -22,7 +22,7 @@ public:
     bool IsActive();
     void SetActive(bool val);
 
-    bool GetBlockType();
+    VoxelBlockType GetBlockType();
     void SetBlockType(VoxelBlockType val);
 
     glm::vec3 GetBlockColour();

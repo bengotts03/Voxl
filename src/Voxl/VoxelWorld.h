@@ -2,11 +2,6 @@
 // Created by Ben Gotts on 07/07/2025.
 //
 
-#define WORLD_SIZE (int)6
-#define HALF_WORLD_SIZE (WORLD_SIZE / 2)
-#include <tuple>
-#include <tuple>
-
 #ifndef VOXELWORLD_H
 #define VOXELWORLD_H
 
@@ -71,7 +66,6 @@ public:
     bool PlaceVoxelBlock(WorldPosition worldPosition);
     bool DestroyVoxelBlock(WorldPosition worldPosition);
 private:
-    // std::vector<std::unique_ptr<VoxelChunk>> _chunks;
     std::unordered_map<VoxelChunkKey, std::unique_ptr<VoxelChunk>, VoxelChunkKeyHash> _chunks;
     std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _visibleChunks;
 
@@ -83,7 +77,7 @@ private:
 
     int _worldSeed = 0;
 
-    const float _chunkViewDistance = 4;
+    const float _chunkViewDistance = 3;
 };
 
 #endif //VOXELWORLD_H

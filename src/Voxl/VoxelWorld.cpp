@@ -3,9 +3,9 @@
 //
 
 #include "VoxelWorld.h"
+#include <future>
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
-
 #include "FastNoiseLite.h"
 
 VoxelWorld::VoxelWorld(Shader& shader, Camera& camera): _shader(shader), _camera(camera) {
@@ -22,25 +22,6 @@ VoxelWorld::~VoxelWorld() {
 
 void VoxelWorld::Init() {
     _chunks.clear();
-
-    // _visibleChunksWithinViewDistance = static_cast<int>(_maxViewDistance / CHUNK_SIZE);
-    // spdlog::info("View Dist: {0}", _visibleChunksWithinViewDistance);
-
-    _camera.Position = glm::vec3(static_cast<float>(-2) * CHUNK_SIZE * VOXEL_SIZE,
-                                 0,
-                                 static_cast<float>(1) * CHUNK_SIZE * VOXEL_SIZE);
-
-    // for (int x = -HALF_WORLD_SIZE; x < HALF_WORLD_SIZE; ++x) {
-    //     for (int z = -HALF_WORLD_SIZE; z < HALF_WORLD_SIZE; ++z) {
-    //         auto chunk = std::make_unique<VoxelChunk>();
-    //         chunk->GenerateTerrain(GetWorldNoise({glm::ivec3(x, 0, z)}));
-    //         chunk->SetWorldPosition(glm::vec3(static_cast<float>(x) * CHUNK_SIZE * VOXEL_SIZE, 0, static_cast<float>(z) * CHUNK_SIZE * VOXEL_SIZE));
-    //         chunk->Load();
-    //
-    //         auto key = VoxelChunkKey(x, z);
-    //         _chunks[key] = std::move(chunk);
-    //     }
-    // }
 }
 
 void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView) {
@@ -51,7 +32,6 @@ void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cam
     _cameraPosition = cameraPosition;
     _cameraView = cameraView;
 }
-
 
 void VoxelWorld::RebuildChunks() {
     // ToDo: Will need a better implementation once we have dynamic loading
@@ -75,7 +55,6 @@ void VoxelWorld::RenderWorldAsync() {
 }
 
 float VoxelWorld::CalculateDistanceToChunkBounds(const ChunkPosition& chunkPos) const {
-    // Convert chunk coordinates to world coordinates
     glm::vec3 chunkWorldPos = glm::vec3(
         static_cast<float>(chunkPos.Position.x) * CHUNK_SIZE * VOXEL_SIZE,
         0,
@@ -171,7 +150,7 @@ float* VoxelWorld::GetWorldNoise(ChunkPosition chunkPosition) {
 
 bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance) {
     glm::vec3 normalizedDir = glm::normalize(direction);
-    float stepSize = VOXEL_SIZE * 0.1f;
+    float stepSize = VOXEL_SIZE * 0.01f;
 
     for (float i = 0; i < maxDistance; i += stepSize) {
         glm::vec3 currentPos = origin + normalizedDir * i;
@@ -188,6 +167,7 @@ bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outH
             continue;
         }
 
+        // ChunkPosition chunkPos = {glm::ivec3(glm::floor(worldPos.Position / (float)CHUNK_SIZE))};
         ChunkPosition chunkPos = WorldPositionToChunk(worldPos);
         VoxelPosition voxelPos = WorldPositionToVoxel(worldPos);
         LocalVoxelPosition localVoxelPos = WorldPositionToLocalVoxel(worldPos);
@@ -267,10 +247,13 @@ bool VoxelWorld::PlaceVoxelBlock(WorldPosition worldPosition) {
 
 bool VoxelWorld::DestroyVoxelBlock(WorldPosition worldPosition) {
     auto chunk = GetChunk(worldPosition);
+    spdlog::info("Ch");
 
     if (chunk) {
         auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition));
+        spdlog::info("Vo");
         if (voxel->IsActive() == true) {
+            spdlog::info("De");
             voxel->SetActive(false);
             chunk->SetFlaggedForRebuild(true);
 

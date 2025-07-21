@@ -89,9 +89,9 @@ void VoxelChunk::GenerateTerrain(float heightMap[CHUNK_SIZE * CHUNK_SIZE]) {
                 if (y == height - 1)
                     currentBlock->SetBlockType(BLOCK_TYPE_GRASS);
 
-                // Debug Chunk Borders
-                if (x == 0 || z == 0 || x == CHUNK_SIZE - 1 || z == CHUNK_SIZE - 1)
-                    currentBlock->SetBlockType(BLOCK_TYPE_DEFAULT);
+                // // Debug Chunk Borders
+                // if (x == 0 || z == 0 || x == CHUNK_SIZE - 1 || z == CHUNK_SIZE - 1)
+                //     currentBlock->SetBlockType(BLOCK_TYPE_DEFAULT);
             }
         }
     }
