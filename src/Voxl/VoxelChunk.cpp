@@ -278,14 +278,6 @@ VoxelBlock* VoxelChunk::GetVoxelBlock(LocalVoxelPosition localVoxelPosition, Loc
     return nullptr;
 }
 
-bool VoxelChunk::IsFlaggedForRebuild() {
-    return _isFlaggedForRebuild;
-}
-
-void VoxelChunk::SetFlaggedForRebuild(bool val) {
-    _isFlaggedForRebuild = val;
-}
-
 bool VoxelChunk::IsLoaded() {
     return _isLoaded;
 }

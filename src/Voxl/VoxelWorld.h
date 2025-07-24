@@ -2,8 +2,11 @@
 // Created by Ben Gotts on 07/07/2025.
 //
 
+
 #ifndef VOXELWORLD_H
 #define VOXELWORLD_H
+
+#define CHUNK_FRAME_UPDATE_LIMIT (int)4
 
 #include "FastNoiseLite.h"
 #include "glm/glm.hpp"
@@ -71,6 +74,7 @@ private:
     std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksToLoad;
     std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksToUnload;
     std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksVisible;
+    std::vector<VoxelChunk*> _chunksToRebuild;
     std::vector<VoxelChunk*> _chunksToRender;
 
     glm::vec3 _cameraPosition = glm::vec3(-1.0f, -1.0f, -1.0f);

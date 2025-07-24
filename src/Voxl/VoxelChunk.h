@@ -48,8 +48,6 @@ public:
     VoxelBlock* GetVoxelBlock(LocalVoxelPosition localVoxelPosition, LocalVoxelPosition& voxelBlockPosition);
     // bool DestroyVoxelBlock(unsigned int x, unsigned int y, unsigned int z);
 
-    bool IsFlaggedForRebuild();
-    void SetFlaggedForRebuild(bool val);
     bool IsLoaded();
     void SetLoaded(bool val);
     bool IsSetup();
@@ -68,7 +66,6 @@ private:
     std::vector<GLuint> _meshIndices;
     std::vector<Texture> _meshTextures;
 
-    bool _isFlaggedForRebuild = false;
     bool _isSetup = false;
     bool _isLoaded = false;
     bool _isEmpty = false;

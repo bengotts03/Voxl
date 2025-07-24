@@ -44,12 +44,16 @@ void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cam
 }
 
 void VoxelWorld::RebuildChunks() {
-    for (auto& [key, chunk] : _chunksVisible) {
-        if (chunk->IsFlaggedForRebuild() && chunk->ShouldRender()) {
+    int numberOfChunksToRebuild = 0;
+    for (auto& chunk : _chunksToRebuild) {
+        if (chunk->ShouldRender() && numberOfChunksToRebuild != CHUNK_FRAME_UPDATE_LIMIT) {
             chunk->CreateMesh();
-            chunk->SetFlaggedForRebuild(false);
+
+            numberOfChunksToRebuild++;
         }
     }
+
+    _chunksToRebuild.clear();
 }
 
 void VoxelWorld::RenderWorldAsync() {
@@ -72,9 +76,13 @@ void VoxelWorld::UpdateSetupList() {
 }
 
 void VoxelWorld::UpdateLoadList() {
+    int numberOfChunksLoaded = 0;
     for (auto [key, chunk]: _chunksToLoad) {
-        if (!chunk->IsLoaded()) {
-            chunk->Load();
+        if (numberOfChunksLoaded != CHUNK_FRAME_UPDATE_LIMIT) {
+            if (!chunk->IsLoaded()) {
+                chunk->Load();
+                numberOfChunksLoaded++;
+            }
         }
     }
 
@@ -284,7 +292,7 @@ bool VoxelWorld::PlaceVoxelBlock(WorldPosition worldPosition) {
         if (voxel->IsActive() == false) {
 
             voxel->SetActive(true);
-            chunk->SetFlaggedForRebuild(true);
+            _chunksToRebuild.push_back(chunk);
 
             return true;
         }
@@ -300,7 +308,7 @@ bool VoxelWorld::DestroyVoxelBlock(WorldPosition worldPosition) {
         auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition));
         if (voxel->IsActive() == true) {
             voxel->SetActive(false);
-            chunk->SetFlaggedForRebuild(true);
+            _chunksToRebuild.push_back(chunk);
 
             return true;
         }
