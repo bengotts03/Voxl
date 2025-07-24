@@ -50,9 +50,9 @@ public:
 
     bool IsFlaggedForRebuild();
     void SetFlaggedForRebuild(bool val);
-
     bool IsLoaded();
     void SetLoaded(bool val);
+    bool IsSetup();
 
     WorldPosition GetWorldPosition();
     void SetWorldPosition(WorldPosition val);
@@ -69,7 +69,8 @@ private:
     std::vector<Texture> _meshTextures;
 
     bool _isFlaggedForRebuild = false;
-    bool _isLoaded = true;
+    bool _isSetup = false;
+    bool _isLoaded = false;
     bool _isEmpty = false;
 };
 

@@ -16,26 +16,35 @@ VoxelWorld::VoxelWorld(Shader& shader, Camera& camera, int seed) : _shader(shade
     Init();
 }
 
-VoxelWorld::~VoxelWorld() {
-
-}
+VoxelWorld::~VoxelWorld() = default;
 
 void VoxelWorld::Init() {
     _chunks.clear();
+    _chunksToSetup.clear();
+    _chunksToLoad.clear();
+    _chunksToUnload.clear();
+    _chunksVisible.clear();
+
+    CreateWorldNoise();
 }
 
 void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView) {
     RenderWorldAsync();
+    UpdateSetupList();
+    UpdateLoadList();
+    UpdateUnloadList();
     UpdateVisibleChunks();
     RebuildChunks();
+
+    if (cameraPosition != _cameraPosition || cameraView != _cameraView)
+        UpdateChunksToRender();
 
     _cameraPosition = cameraPosition;
     _cameraView = cameraView;
 }
 
 void VoxelWorld::RebuildChunks() {
-    // ToDo: Will need a better implementation once we have dynamic loading
-    for (auto& [key, chunk] : _visibleChunks) {
+    for (auto& [key, chunk] : _chunksVisible) {
         if (chunk->IsFlaggedForRebuild() && chunk->ShouldRender()) {
             chunk->CreateMesh();
             chunk->SetFlaggedForRebuild(false);
@@ -44,14 +53,40 @@ void VoxelWorld::RebuildChunks() {
 }
 
 void VoxelWorld::RenderWorldAsync() {
-    // ToDo: Will need a better implementation once we have dynamic loading
-    for (auto& [key, chunk] : _visibleChunks) {
+    for (auto& chunk : _chunksToRender) {
         chunk->Update(1);
+        chunk->Render(_shader, _camera);
+    }
+}
 
-        if (chunk->ShouldRender()) {
-            chunk->Render(_shader, _camera);
+void VoxelWorld::UpdateSetupList() {
+    for (auto [key, chunk]: _chunksToSetup) {
+        auto chunkPos = chunk->GetChunkPosition();
+        chunk->Setup();
+        chunk->GenerateTerrain(GetWorldNoise(chunkPos));
+
+        _chunksToLoad[key] = chunk;
+    }
+
+    _chunksToSetup.clear();
+}
+
+void VoxelWorld::UpdateLoadList() {
+    for (auto [key, chunk]: _chunksToLoad) {
+        if (!chunk->IsLoaded()) {
+            chunk->Load();
         }
     }
+
+    _chunksToLoad.clear();
+}
+
+void VoxelWorld::UpdateUnloadList() {
+    for (auto [key, chunk]: _chunksToUnload) {
+        chunk->Unload();
+    }
+
+    _chunksToUnload.clear();
 }
 
 float VoxelWorld::CalculateDistanceToChunkBounds(const ChunkPosition& chunkPos) const {
@@ -77,8 +112,8 @@ void VoxelWorld::UpdateVisibleChunks() {
     auto currentPositionInWorld = WorldPosition{_cameraPosition};
     auto currentChunkPosition = WorldPositionToChunk(currentPositionInWorld);
 
-    auto previouslyVisibleChunks = std::move(_visibleChunks);
-    _visibleChunks.clear();
+    auto previouslyVisibleChunks = std::move(_chunksVisible);
+    _chunksVisible.clear();
 
     for (int z = -_chunkViewDistance; z < _chunkViewDistance; ++z) {
         for (int x = -_chunkViewDistance; x < _chunkViewDistance; ++x) {
@@ -93,20 +128,20 @@ void VoxelWorld::UpdateVisibleChunks() {
                     auto& chunk = _chunks[viewedChunkKey];
 
                     if (!chunk->IsLoaded())
-                        chunk->Load();
+                        _chunksToLoad[viewedChunkKey] = chunk.get();
 
-                    _visibleChunks[viewedChunkKey] = chunk.get();
+                    _chunksVisible[viewedChunkKey] = chunk.get();
                 }
                 else {
                     auto chunk = std::make_unique<VoxelChunk>();
-                    chunk->GenerateTerrain(GetWorldNoise(viewedChunkPosition));
                     chunk->SetWorldPosition(glm::vec3(static_cast<float>(viewedChunkPosition.Position.x) * CHUNK_SIZE * VOXEL_SIZE,
-                                                0,
-                                                static_cast<float>(viewedChunkPosition.Position.z) * CHUNK_SIZE * VOXEL_SIZE));
-                    chunk->Load();
+                              0,
+                              static_cast<float>(viewedChunkPosition.Position.z) * CHUNK_SIZE * VOXEL_SIZE));
+                    _chunksToSetup[viewedChunkKey] = chunk.get();
 
                     // Gives a pointer of the chunk to our visibles tracker
-                    _visibleChunks[viewedChunkKey] = chunk.get();
+                    _chunksVisible[viewedChunkKey] = chunk.get();
+
                     // Registers the chunk
                     _chunks[viewedChunkKey] = std::move(chunk);
                 }
@@ -114,34 +149,47 @@ void VoxelWorld::UpdateVisibleChunks() {
         }
     }
 
-    for (auto& [key, chunk] : previouslyVisibleChunks) {
-        if (!_visibleChunks.contains(key) && chunk->IsLoaded())
-            chunk->Unload();
+    for (auto& [key, chunk] : previouslyVisibleChunks)
+        if (!_chunksVisible.contains(key) && chunk->IsLoaded())
+            _chunksToUnload[key] = chunk;
+}
+
+void VoxelWorld::UpdateChunksToRender() {
+    _chunksToRender.clear();
+
+    for (auto [key, chunk] : _chunksVisible) {
+        if (chunk->IsLoaded() && chunk->IsSetup()) {
+            if (chunk->ShouldRender()) {
+                // Any additional checks should be added here
+                _chunksToRender.push_back(chunk);
+            }
+        }
     }
+}
+
+void VoxelWorld::CreateWorldNoise() {
+    _worldNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+    _worldNoise.SetSeed(240503);
+    _worldNoise.SetFrequency(0.01f);
+
+    _worldNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    _worldNoise.SetFractalOctaves(4);
+    _worldNoise.SetFractalLacunarity(2.2f);
+    _worldNoise.SetFractalGain(0.5f);
+
+    _worldNoise.SetDomainWarpType(FastNoiseLite::DomainWarpType_BasicGrid);
+    _worldNoise.SetDomainWarpAmp(2.5f);
 }
 
 float* VoxelWorld::GetWorldNoise(ChunkPosition chunkPosition) {
     static float heightMap[CHUNK_SIZE * CHUNK_SIZE];
 
-    FastNoiseLite noise;
-    noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    noise.SetSeed(240503);
-    noise.SetFrequency(0.01f);
-
-    noise.SetFractalType(FastNoiseLite::FractalType_FBm);
-    noise.SetFractalOctaves(4);
-    noise.SetFractalLacunarity(2.2f);
-    noise.SetFractalGain(0.5f);
-
-    noise.SetDomainWarpType(FastNoiseLite::DomainWarpType_BasicGrid);
-    noise.SetDomainWarpAmp(2.5f);
-
     for (int z = 0; z < CHUNK_SIZE; z++) {
         for (int x = 0; x < CHUNK_SIZE; x++) {
-            float samplePositionX = x + (chunkPosition.Position.x * CHUNK_SIZE);
-            float samplePositionZ = z + (chunkPosition.Position.z * CHUNK_SIZE);
+            float samplePositionX = static_cast<float>(x) + static_cast<float>(chunkPosition.Position.x) * CHUNK_SIZE;
+            float samplePositionZ = static_cast<float>(z) + static_cast<float>(chunkPosition.Position.z) * CHUNK_SIZE;
 
-            heightMap[x * CHUNK_SIZE + z] = noise.GetNoise(samplePositionX, samplePositionZ);
+            heightMap[x * CHUNK_SIZE + z] = _worldNoise.GetNoise(samplePositionX, samplePositionZ);
         }
     }
 
@@ -247,13 +295,10 @@ bool VoxelWorld::PlaceVoxelBlock(WorldPosition worldPosition) {
 
 bool VoxelWorld::DestroyVoxelBlock(WorldPosition worldPosition) {
     auto chunk = GetChunk(worldPosition);
-    spdlog::info("Ch");
 
     if (chunk) {
         auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition));
-        spdlog::info("Vo");
         if (voxel->IsActive() == true) {
-            spdlog::info("De");
             voxel->SetActive(false);
             chunk->SetFlaggedForRebuild(true);
 

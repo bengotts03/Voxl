@@ -5,6 +5,7 @@
 #ifndef VOXELWORLD_H
 #define VOXELWORLD_H
 
+#include "FastNoiseLite.h"
 #include "glm/glm.hpp"
 #include "src/Core/Shader.h"
 #include "src/Core/Camera.h"
@@ -33,13 +34,6 @@ struct VoxelChunkKeyHash {
     }
 };
 
-struct Neighbours {
-    bool xNeg;
-    bool xPos;
-    bool zNeg;
-    bool zPos;
-};
-
 class VoxelChunk;
 class VoxelWorld {
 public:
@@ -50,12 +44,18 @@ public:
     void Init();
     void Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView);
 
-    float CalculateDistanceToChunkBounds(const ChunkPosition& chunkPosition) const;
-    void UpdateVisibleChunks();
-    void RebuildChunks();
     void RenderWorldAsync();
+    void UpdateSetupList();
+    void UpdateLoadList();
+    void UpdateUnloadList();
+    void UpdateVisibleChunks();
+    void UpdateChunksToRender();
+    void RebuildChunks();
 
+    void CreateWorldNoise();
     float* GetWorldNoise(ChunkPosition chunkPosition);
+
+    float CalculateDistanceToChunkBounds(const ChunkPosition& chunkPosition) const;
 
     bool Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance = 100.0f);
 
@@ -67,7 +67,11 @@ public:
     bool DestroyVoxelBlock(WorldPosition worldPosition);
 private:
     std::unordered_map<VoxelChunkKey, std::unique_ptr<VoxelChunk>, VoxelChunkKeyHash> _chunks;
-    std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _visibleChunks;
+    std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksToSetup;
+    std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksToLoad;
+    std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksToUnload;
+    std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksVisible;
+    std::vector<VoxelChunk*> _chunksToRender;
 
     glm::vec3 _cameraPosition = glm::vec3(-1.0f, -1.0f, -1.0f);
     glm::vec3 _cameraView = glm::vec3(-1.0f, -1.0f, -1.0f);
@@ -76,8 +80,9 @@ private:
     Camera& _camera;
 
     int _worldSeed = 0;
+    FastNoiseLite _worldNoise;
 
-    const float _chunkViewDistance = 3;
+    const int _chunkViewDistance = 3;
 };
 
 #endif //VOXELWORLD_H

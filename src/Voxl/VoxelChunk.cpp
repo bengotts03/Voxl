@@ -10,7 +10,6 @@
 #include "random"
 
 VoxelChunk::VoxelChunk() {
-    Setup();
 }
 
 VoxelChunk::~VoxelChunk() {
@@ -30,6 +29,8 @@ void VoxelChunk::Setup() {
             }
         }
     }
+
+    _isSetup = true;
 }
 
 void VoxelChunk::Update(float deltaTime) {
@@ -37,7 +38,6 @@ void VoxelChunk::Update(float deltaTime) {
         return;
 
     _chunkMesh->Position = _worldPosition.Position;
-
     _isEmpty = _chunkMesh->GetNumVerts() == 0 && _chunkMesh->GetNumIndices() == 0;
 }
 
@@ -50,7 +50,7 @@ void VoxelChunk::Load() {
 
 void VoxelChunk::Unload() {
     if (!_isLoaded) {
-        spdlog::warn("Trying to unload chunk that isnt loaded");
+        spdlog::warn("Trying to unload chunk that isn't loaded");
         return;
     }
 
@@ -292,6 +292,10 @@ bool VoxelChunk::IsLoaded() {
 
 void VoxelChunk::SetLoaded(bool val) {
     _isLoaded = val;
+}
+
+bool VoxelChunk::IsSetup() {
+    return _isSetup;
 }
 
 WorldPosition VoxelChunk::GetWorldPosition() {
