@@ -32,8 +32,11 @@ public:
 
     glm::vec3 Position = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 Direction = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::mat4 CameraMatrix = glm::mat4(1);
+    glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    glm::vec3 Right;
+    glm::vec3 Forward;
 private:
     float _width;
     float _height;

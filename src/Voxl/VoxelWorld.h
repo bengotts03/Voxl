@@ -8,7 +8,9 @@
 
 #define CHUNK_FRAME_UPDATE_LIMIT (int)4
 
+#include "BoundingBox.h"
 #include "FastNoiseLite.h"
+#include "FrustrumCuller.h"
 #include "glm/glm.hpp"
 #include "src/Core/Shader.h"
 #include "src/Core/Camera.h"
@@ -47,6 +49,7 @@ public:
     void Init();
     void Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView);
 
+    void RenderChunk(VoxelChunk* chunk);
     void RenderWorldAsync();
     void UpdateSetupList();
     void UpdateLoadList();
@@ -57,8 +60,6 @@ public:
 
     void CreateWorldNoise();
     float* GetWorldNoise(ChunkPosition chunkPosition);
-
-    float CalculateDistanceToChunkBounds(const ChunkPosition& chunkPosition) const;
 
     bool Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance = 100.0f);
 
@@ -82,6 +83,8 @@ private:
 
     Shader& _shader;
     Camera& _camera;
+
+    FrustrumCuller* _frustrumCuller = nullptr;
 
     int _worldSeed = 0;
     FastNoiseLite _worldNoise;

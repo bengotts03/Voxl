@@ -14,9 +14,10 @@ file(GLOB_RECURSE SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
 
 set(GLAD_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/glad/src/glad.c")
 set(STB_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb_image.cpp")
+set(DEBUG_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/vendor/debug_draw/")
 
 # Add the executable
-add_executable(Voxl ${HEADERS} ${SOURCE} ${GLAD_SOURCE} ${STB_SOURCE})
+add_executable(Voxl ${HEADERS} ${SOURCE} ${GLAD_SOURCE} ${STB_SOURCE} ${DEBUG_SOURCE})
 
 # Include directories
 target_include_directories(Voxl PRIVATE

@@ -9,7 +9,8 @@
 #include "src/Core/Mesh.h"
 #include "random"
 
-VoxelChunk::VoxelChunk() {
+VoxelChunk::VoxelChunk() : _chunkMesh(nullptr) {
+    _boundingBox = new BoundingBox();
 }
 
 VoxelChunk::~VoxelChunk() {
@@ -37,7 +38,11 @@ void VoxelChunk::Update(float deltaTime) {
     if (!IsLoaded())
         return;
 
-    _chunkMesh->Position = _worldPosition.Position;
+    if (_chunkMesh->Position != _worldPosition.Position) {
+        _chunkMesh->Position = _worldPosition.Position;
+        RecalculateBounds();
+    }
+
     _isEmpty = _chunkMesh->GetNumVerts() == 0 && _chunkMesh->GetNumIndices() == 0;
 }
 
@@ -45,6 +50,7 @@ void VoxelChunk::Load() {
     CreateMesh();
 
     _isLoaded = true;
+
     spdlog::info("Loading Chunk: {0},{1}", _worldPosition.Position.x, _worldPosition.Position.z);
 }
 
@@ -55,6 +61,7 @@ void VoxelChunk::Unload() {
     }
 
     _isLoaded = false;
+
     delete _chunkMesh;
 
     spdlog::info("Unloading Chunk: {0},{1}", _worldPosition.Position.x, _worldPosition.Position.z);
@@ -244,6 +251,22 @@ void VoxelChunk::CreateMesh() {
     _chunkMesh = new Mesh(_meshVertices, _meshIndices, _meshTextures);
 }
 
+void VoxelChunk::RecalculateBounds() {
+    glm::vec3 chunkWorldPos = _worldPosition.Position + glm::vec3(
+    CHUNK_SIZE * VOXEL_SIZE,
+    CHUNK_SIZE * VOXEL_SIZE,
+    CHUNK_SIZE * VOXEL_SIZE);
+
+    glm::vec3 boundsMin = chunkWorldPos;
+    glm::vec3 boundsMax = chunkWorldPos + glm::vec3(CHUNK_SIZE * VOXEL_SIZE, CHUNK_SIZE * VOXEL_SIZE, CHUNK_SIZE * VOXEL_SIZE);
+
+    _boundingBox = new BoundingBox(boundsMin, boundsMax);
+}
+
+BoundingBox* VoxelChunk::GetBounds() {
+    return _boundingBox;
+}
+
 VoxelBlock* VoxelChunk::GetVoxelBlock(WorldPosition worldPosition) {
     ChunkPosition chunkPosition = WorldPositionToChunk(worldPosition);
     return GetVoxelBlock(chunkPosition);
@@ -282,10 +305,6 @@ bool VoxelChunk::IsLoaded() {
     return _isLoaded;
 }
 
-void VoxelChunk::SetLoaded(bool val) {
-    _isLoaded = val;
-}
-
 bool VoxelChunk::IsSetup() {
     return _isSetup;
 }
@@ -301,8 +320,4 @@ void VoxelChunk::SetWorldPosition(WorldPosition val) {
 ChunkPosition VoxelChunk::GetChunkPosition() {
     _chunkPosition = WorldPositionToChunk(_worldPosition);
     return _chunkPosition;
-}
-
-void VoxelChunk::SetChunkPosition(ChunkPosition val) {
-    _chunkPosition = val;
 }

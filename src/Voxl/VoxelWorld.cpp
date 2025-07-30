@@ -3,12 +3,11 @@
 //
 
 #include "VoxelWorld.h"
-#include <future>
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
 #include "FastNoiseLite.h"
 
-VoxelWorld::VoxelWorld(Shader& shader, Camera& camera): _shader(shader), _camera(camera) {
+VoxelWorld::VoxelWorld(Shader& shader, Camera& camera): _shader(shader), _camera(camera){
     Init();
 }
 
@@ -36,8 +35,9 @@ void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cam
     UpdateVisibleChunks();
     RebuildChunks();
 
-    if (cameraPosition != _cameraPosition || cameraView != _cameraView)
+    if (cameraPosition != _cameraPosition || cameraView != _cameraView) {
         UpdateChunksToRender();
+    }
 
     _cameraPosition = cameraPosition;
     _cameraView = cameraView;
@@ -97,25 +97,6 @@ void VoxelWorld::UpdateUnloadList() {
     _chunksToUnload.clear();
 }
 
-float VoxelWorld::CalculateDistanceToChunkBounds(const ChunkPosition& chunkPos) const {
-    glm::vec3 chunkWorldPos = glm::vec3(
-        static_cast<float>(chunkPos.Position.x) * CHUNK_SIZE * VOXEL_SIZE,
-        0,
-        static_cast<float>(chunkPos.Position.z) * CHUNK_SIZE * VOXEL_SIZE
-    );
-
-    glm::vec3 boundsMin = chunkWorldPos;
-    glm::vec3 boundsMax = chunkWorldPos + glm::vec3(CHUNK_SIZE * VOXEL_SIZE, 0, CHUNK_SIZE * VOXEL_SIZE);
-
-    float clampedX = glm::clamp(_cameraPosition.x, boundsMin.x, boundsMax.x);
-    float clampedZ = glm::clamp(_cameraPosition.z, boundsMin.z, boundsMax.z);
-
-    float dx = _cameraPosition.x - clampedX;
-    float dz = _cameraPosition.z - clampedZ;
-
-    return glm::sqrt(dx * dx + dz * dz);
-}
-
 void VoxelWorld::UpdateVisibleChunks() {
     auto currentPositionInWorld = WorldPosition{_cameraPosition};
     auto currentChunkPosition = WorldPositionToChunk(currentPositionInWorld);
@@ -168,7 +149,6 @@ void VoxelWorld::UpdateChunksToRender() {
     for (auto [key, chunk] : _chunksVisible) {
         if (chunk->IsLoaded() && chunk->IsSetup()) {
             if (chunk->ShouldRender()) {
-                // Any additional checks should be added here
                 _chunksToRender.push_back(chunk);
             }
         }

@@ -8,6 +8,7 @@
 #ifndef VOXELCHUNK_H
 #define VOXELCHUNK_H
 
+#include "BoundingBox.h"
 #include "glad/glad.h"
 #include "src/Core/Camera.h"
 #include "src/Core/Mesh.h"
@@ -39,26 +40,28 @@ public:
 
     void GenerateTerrain(float heightMap[CHUNK_SIZE * CHUNK_SIZE]);
 
-    void CreateVoxel(glm::vec3 position, glm::vec3 colour, bool xNeg, bool xPos, bool yNeg, bool yPos, bool zNeg, bool zPos);
     void CreateMesh();
+
+    BoundingBox* GetBounds();
 
     VoxelBlock* GetVoxelBlock(WorldPosition worldPosition);
     VoxelBlock* GetVoxelBlock(ChunkPosition chunkPosition);
     VoxelBlock* GetVoxelBlock(LocalVoxelPosition localVoxelPosition);
     VoxelBlock* GetVoxelBlock(LocalVoxelPosition localVoxelPosition, LocalVoxelPosition& voxelBlockPosition);
-    // bool DestroyVoxelBlock(unsigned int x, unsigned int y, unsigned int z);
 
     bool IsLoaded();
-    void SetLoaded(bool val);
     bool IsSetup();
 
     WorldPosition GetWorldPosition();
     void SetWorldPosition(WorldPosition val);
     ChunkPosition GetChunkPosition();
-    void SetChunkPosition(ChunkPosition val);
+private:
+    void CreateVoxel(glm::vec3 position, glm::vec3 colour, bool xNeg, bool xPos, bool yNeg, bool yPos, bool zNeg, bool zPos);
+    void RecalculateBounds();
 private:
     std::vector<std::vector<std::vector<std::unique_ptr<VoxelBlock>>>> _blocks;
     Mesh* _chunkMesh;
+
     WorldPosition _worldPosition = WorldPosition{0, 0, 0};
     ChunkPosition _chunkPosition = ChunkPosition{0, 0, 0};
 
@@ -69,6 +72,8 @@ private:
     bool _isSetup = false;
     bool _isLoaded = false;
     bool _isEmpty = false;
+
+    BoundingBox* _boundingBox;
 };
 
 #endif //VOXELCHUNK_H

@@ -13,6 +13,8 @@
 GLFWwindow* window;
 const unsigned int width = 800;
 const unsigned int height = 800;
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 800
 Camera* camera;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -47,7 +49,9 @@ int main() {
     glEnable(GL_CULL_FACE);
 
     auto shader = Shader("../assets/shaders/default.vert", "../assets/shaders/default.frag");
+
     camera = new Camera(width, height, glm::vec3(0, 0, -2));
+    camera->Position = glm::vec3(0, 2, 0);
 
     auto skyboxShader = Shader("../assets/shaders/skybox.vert", "../assets/shaders/skybox.frag");
     Vertex skyboxVertices[] = {
@@ -157,6 +161,10 @@ int main() {
             }
         }
         oldState = newState;
+
+        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+            world.UpdateChunksToRender();
+        }
 
         camera->UpdateMatrix(90.0f, 0.1f, 100.0f);
 

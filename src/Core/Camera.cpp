@@ -4,7 +4,10 @@
 
 #include "Camera.h"
 
-Camera::Camera(int width, int height, glm::vec3 pos) : _width(width), _height(height), Position(pos){}
+Camera::Camera(int width, int height, glm::vec3 pos) : _width(width), _height(height), Position(pos) {
+    Right = glm::normalize(glm::cross(Direction, Up));
+    Forward = Direction;
+}
 
 void Camera::CalculateMatrix(Shader& shader, const char* uniform) {
     glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(CameraMatrix));
@@ -43,13 +46,13 @@ void Camera::HandleInput(GLFWwindow *window) {
         Position += _speed * Direction;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        Position += _speed * -glm::normalize(glm::cross(Direction, Up));
+        Position += _speed * -Right;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
         Position += _speed * -Direction;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        Position += _speed * glm::normalize(glm::cross(Direction, Up));
+        Position += _speed * Right;
     }
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
@@ -62,7 +65,7 @@ void Camera::HandleInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
         _speed = 0.3f;
     }
-    else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_RELEASE) {
+    else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
        _speed = 0.1f;
     }
 
@@ -79,15 +82,18 @@ void Camera::HandleInput(GLFWwindow *window) {
         glfwGetCursorPos(window, &mouseX, &mouseY);
 
         float rotationX = _lookSensitivity * (float)(mouseY - (_height / 2)) / _height;
-        float rotationY = _lookSensitivity * (float)(mouseX - (_height / 2)) / _height;
+        float rotationY = _lookSensitivity * (float)(mouseX - (_width / 2)) / _width;
 
-        glm::vec3 newDirection = glm::rotate(Direction, glm::radians(-rotationX), glm::normalize(glm::cross(Direction, Up)));
+        glm::vec3 newDirection = glm::rotate(Direction, glm::radians(-rotationX), Right);
 
         if (!((glm::angle(newDirection, Up) <= glm::radians(5.0f)) or (glm::angle(newDirection, -Up) <= glm::radians(5.0f)))){
             Direction = newDirection;
         }
 
         Direction = glm::rotate(Direction, glm::radians(-rotationY), Up);
+
+        Right = glm::normalize(glm::cross(Direction, Up));
+        Forward = Direction;
 
         glfwSetCursorPos(window, (_width / 2), (_height / 2));
     }
