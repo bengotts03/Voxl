@@ -27,20 +27,15 @@ void VoxelBlock::SetBlockType(VoxelBlockType val) {
         _blockType = val;
 }
 
-glm::vec3 VoxelBlock::GetBlockColour() {
+VoxelBlockTextureData VoxelBlock::GetBlockTextureCoords() {
     switch (_blockType) {
         case BLOCK_TYPE_DEFAULT:
-            return {1.0f, 1.0f, 1.0f};
             break;
         case BLOCK_TYPE_GRASS:
-            return {0.61f, 0.8f, 0.48f};
-            break;
+            return VoxelBlockTextureData({7, 5}, {6, 8});
         case BLOCK_TYPE_DIRT:
-            return {0.59f, 0.36f, 0.15f};
-            break;
+            return VoxelBlockTextureData({7, 4});
         case BLOCK_TYPE_STONE:
-            return {0.56f, 0.56f, 0.56f};
-            break;
+            return VoxelBlockTextureData({3, 5});
     }
-    return {0, 1, 1};
 }

@@ -16,20 +16,14 @@
 #include "src/Core/VertexBuffer.h"
 #include "VoxelBlock.h"
 #include "VoxelPositioning.h"
-
-enum Orientation {
-    PositiveX,
-    NegativeX,
-    PositiveZ,
-    NegativeZ
-};
+#include "VoxelTerrainGenerator.h"
 
 class VoxelChunk {
 public:
     VoxelChunk();
     ~VoxelChunk();
 
-    void Setup();
+    void Setup(ChunkTerrainData terrainData);
     void Update(float deltaTime);
 
     void Load();
@@ -38,10 +32,7 @@ public:
     void Render(Shader& shader, Camera& camera);
     bool ShouldRender();
 
-    void GenerateTerrain(float heightMap[CHUNK_SIZE * CHUNK_SIZE]);
-
     void CreateMesh();
-
     BoundingBox* GetBounds();
 
     VoxelBlock* GetVoxelBlock(WorldPosition worldPosition);
@@ -56,11 +47,11 @@ public:
     void SetWorldPosition(WorldPosition val);
     ChunkPosition GetChunkPosition();
 private:
-    void CreateVoxel(glm::vec3 position, glm::vec3 colour, bool xNeg, bool xPos, bool yNeg, bool yPos, bool zNeg, bool zPos);
+    void CreateVoxel(glm::vec3 position, VoxelBlockTextureData textureData, bool xNeg, bool xPos, bool yNeg, bool yPos, bool zNeg, bool zPos);
     void RecalculateBounds();
 private:
     std::vector<std::vector<std::vector<std::unique_ptr<VoxelBlock>>>> _blocks;
-    Mesh* _chunkMesh;
+    std::unique_ptr<Mesh> _chunkMesh;
 
     WorldPosition _worldPosition = WorldPosition{0, 0, 0};
     ChunkPosition _chunkPosition = ChunkPosition{0, 0, 0};

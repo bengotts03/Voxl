@@ -7,6 +7,16 @@
 
 #include "glm/glm.hpp"
 
+struct VoxelBlockTextureData {
+    glm::vec2 SideCoords;
+    glm::vec2 TopCoords;
+    glm::vec2 BottomCoords;
+
+    VoxelBlockTextureData(glm::vec2 coords) : SideCoords(coords), TopCoords({-1, -1}), BottomCoords({-1, -1}) {}
+    VoxelBlockTextureData(glm::vec2 sideCoords, glm::vec2 topCoords) : SideCoords(sideCoords), TopCoords(topCoords) {}
+    VoxelBlockTextureData(glm::vec2 sideCoords, glm::vec2 topCoords, glm::vec2 bottomCoords) : SideCoords(sideCoords), TopCoords(topCoords), BottomCoords(bottomCoords) {}
+};
+
 enum VoxelBlockType {
     BLOCK_TYPE_DEFAULT,
     BLOCK_TYPE_GRASS,
@@ -25,7 +35,7 @@ public:
     VoxelBlockType GetBlockType();
     void SetBlockType(VoxelBlockType val);
 
-    glm::vec3 GetBlockColour();
+    VoxelBlockTextureData GetBlockTextureCoords();
 private:
     bool _isActive;
     VoxelBlockType _blockType;
