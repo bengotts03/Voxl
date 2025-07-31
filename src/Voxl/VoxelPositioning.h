@@ -5,6 +5,11 @@
 #ifndef VOXELPOSITIONING_H
 #define VOXELPOSITIONING_H
 
+#include <glm/glm.hpp>
+
+#define CHUNK_SIZE (int)32
+#define VOXEL_SIZE (float)0.1f
+
 /**
  * @brief Represents a position in global world space.
  *

@@ -16,6 +16,7 @@
 #include "src/Core/Camera.h"
 #include "VoxelChunk.h"
 #include "VoxelPositioning.h"
+#include "VoxelTerrainGenerator.h"
 
 struct RaycastHit {
     WorldPosition WorldPositionHit{};
@@ -58,9 +59,6 @@ public:
     void UpdateChunksToRender();
     void RebuildChunks();
 
-    void CreateWorldNoise();
-    float* GetWorldNoise(ChunkPosition chunkPosition);
-
     bool Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance = 100.0f);
 
     VoxelChunk* GetChunk(WorldPosition worldPosition);
@@ -87,7 +85,7 @@ private:
     FrustrumCuller* _frustrumCuller = nullptr;
 
     int _worldSeed = 0;
-    FastNoiseLite _worldNoise;
+    VoxelTerrainGenerator* _terrainGenerator;
 
     const int _chunkViewDistance = 3;
 };

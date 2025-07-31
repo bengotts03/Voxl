@@ -6,6 +6,7 @@
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
 #include "FastNoiseLite.h"
+#include "SimpleVoxelTerrainGenerator.h"
 
 VoxelWorld::VoxelWorld(Shader& shader, Camera& camera): _shader(shader), _camera(camera){
     Init();
@@ -24,7 +25,8 @@ void VoxelWorld::Init() {
     _chunksToUnload.clear();
     _chunksVisible.clear();
 
-    CreateWorldNoise();
+    _terrainGenerator = new SimpleVoxelTerrainGenerator();
+    _terrainGenerator->GenerateTerrainNoise();
 }
 
 void VoxelWorld::Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView) {
@@ -66,8 +68,7 @@ void VoxelWorld::RenderWorldAsync() {
 void VoxelWorld::UpdateSetupList() {
     for (auto [key, chunk]: _chunksToSetup) {
         auto chunkPos = chunk->GetChunkPosition();
-        chunk->Setup();
-        chunk->GenerateTerrain(GetWorldNoise(chunkPos));
+        chunk->Setup(_terrainGenerator->GenerateTerrain(chunkPos));
 
         _chunksToLoad[key] = chunk;
     }
@@ -153,35 +154,6 @@ void VoxelWorld::UpdateChunksToRender() {
             }
         }
     }
-}
-
-void VoxelWorld::CreateWorldNoise() {
-    _worldNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    _worldNoise.SetSeed(240503);
-    _worldNoise.SetFrequency(0.01f);
-
-    _worldNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
-    _worldNoise.SetFractalOctaves(4);
-    _worldNoise.SetFractalLacunarity(2.2f);
-    _worldNoise.SetFractalGain(0.5f);
-
-    _worldNoise.SetDomainWarpType(FastNoiseLite::DomainWarpType_BasicGrid);
-    _worldNoise.SetDomainWarpAmp(2.5f);
-}
-
-float* VoxelWorld::GetWorldNoise(ChunkPosition chunkPosition) {
-    static float heightMap[CHUNK_SIZE * CHUNK_SIZE];
-
-    for (int z = 0; z < CHUNK_SIZE; z++) {
-        for (int x = 0; x < CHUNK_SIZE; x++) {
-            float samplePositionX = static_cast<float>(x) + static_cast<float>(chunkPosition.Position.x) * CHUNK_SIZE;
-            float samplePositionZ = static_cast<float>(z) + static_cast<float>(chunkPosition.Position.z) * CHUNK_SIZE;
-
-            heightMap[x * CHUNK_SIZE + z] = _worldNoise.GetNoise(samplePositionX, samplePositionZ);
-        }
-    }
-
-    return heightMap;
 }
 
 bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance) {
