@@ -3,10 +3,16 @@
 //
 
 #include "VoxelWorld.h"
+
+#include <future>
+
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
 #include "FastNoiseLite.h"
 #include "SimpleVoxelTerrainGenerator.h"
+#include "BS_thread_pool.hpp"
+
+BS::thread_pool<BS::none> VoxelWorld::ChunkPool = BS::thread_pool<BS::none>(CHUNK_FRAME_UPDATE_LIMIT);
 
 VoxelWorld::VoxelWorld(Shader& shader, Camera& camera): _shader(shader), _camera(camera){
     Init();
@@ -49,7 +55,8 @@ void VoxelWorld::RebuildChunks() {
     int numberOfChunksToRebuild = 0;
     for (auto& chunk : _chunksToRebuild) {
         if (chunk->ShouldRender() && numberOfChunksToRebuild != CHUNK_FRAME_UPDATE_LIMIT) {
-            chunk->CreateMesh();
+            // TODO: Add a method in the chunk to rebuild using threading
+            // chunk->CreateMesh();
 
             numberOfChunksToRebuild++;
         }
@@ -79,11 +86,13 @@ void VoxelWorld::UpdateSetupList() {
 void VoxelWorld::UpdateLoadList() {
     int numberOfChunksLoaded = 0;
     for (auto [key, chunk]: _chunksToLoad) {
-        if (numberOfChunksLoaded != CHUNK_FRAME_UPDATE_LIMIT) {
-            if (!chunk->IsLoaded()) {
-                chunk->Load();
-                numberOfChunksLoaded++;
-            }
+        if (numberOfChunksLoaded >= CHUNK_FRAME_UPDATE_LIMIT)
+            break;
+
+        if (!chunk->IsLoaded()) {
+            chunk->Load();
+
+            numberOfChunksLoaded++;
         }
     }
 

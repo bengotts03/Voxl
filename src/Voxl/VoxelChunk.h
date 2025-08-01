@@ -8,6 +8,8 @@
 #ifndef VOXELCHUNK_H
 #define VOXELCHUNK_H
 
+#include <future>
+
 #include "BoundingBox.h"
 #include "glad/glad.h"
 #include "src/Core/Camera.h"
@@ -17,6 +19,16 @@
 #include "VoxelBlock.h"
 #include "VoxelPositioning.h"
 #include "VoxelTerrainGenerator.h"
+
+struct NeighbourStates {
+    bool xNeg, xPos, yNeg, yPos, zNeg, zPos;
+};
+
+struct MeshData {
+    std::vector<Vertex> MeshVertices;
+    std::vector<GLuint> MeshIndices;
+    std::vector<Texture> MeshTextures;
+};
 
 class VoxelChunk {
 public:
@@ -32,7 +44,9 @@ public:
     void Render(Shader& shader, Camera& camera);
     bool ShouldRender();
 
+    void CreateMeshData(MeshData& outMeshData);
     void CreateMesh();
+
     BoundingBox* GetBounds();
 
     VoxelBlock* GetVoxelBlock(WorldPosition worldPosition);
@@ -47,9 +61,11 @@ public:
     void SetWorldPosition(WorldPosition val);
     ChunkPosition GetChunkPosition();
 private:
-    void CreateVoxel(glm::vec3 position, VoxelBlockTextureData textureData, bool xNeg, bool xPos, bool yNeg, bool yPos, bool zNeg, bool zPos);
+    void CreateVoxel(glm::vec3 position, VoxelBlockTextureData textureData, NeighbourStates neighbourStates, MeshData& outMeshData);
     void RecalculateBounds();
 private:
+    Texture ChunkSpriteSheet;
+
     std::vector<std::vector<std::vector<std::unique_ptr<VoxelBlock>>>> _blocks;
     std::unique_ptr<Mesh> _chunkMesh;
 
@@ -61,8 +77,12 @@ private:
     std::vector<Texture> _meshTextures;
 
     bool _isSetup = false;
-    bool _isLoaded = false;
     bool _isEmpty = false;
+
+    bool _isLoadingChunk = false;
+    bool _hasLoadedChunk = false;
+    bool _hasLoadedChunkMesh = false;
+    std::future<MeshData> _futureMeshData;
 
     BoundingBox* _boundingBox;
 };

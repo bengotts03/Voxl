@@ -21,6 +21,7 @@ add_executable(Voxl ${HEADERS} ${SOURCE} ${GLAD_SOURCE} ${STB_SOURCE} ${DEBUG_SO
 
 # Include directories
 target_include_directories(Voxl PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/vendor/"
         "${CMAKE_CURRENT_SOURCE_DIR}/vendor/noise/"
         "${CMAKE_CURRENT_SOURCE_DIR}/vendor/glad/include"
         "${VCPKG_INCLUDE_DIRS}"

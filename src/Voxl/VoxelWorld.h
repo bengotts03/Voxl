@@ -9,6 +9,7 @@
 #define CHUNK_FRAME_UPDATE_LIMIT (int)4
 
 #include "BoundingBox.h"
+#include "BS_thread_pool.hpp"
 #include "FastNoiseLite.h"
 #include "FrustrumCuller.h"
 #include "glm/glm.hpp"
@@ -67,6 +68,8 @@ public:
 
     bool PlaceVoxelBlock(WorldPosition worldPosition);
     bool DestroyVoxelBlock(WorldPosition worldPosition);
+public:
+    static BS::thread_pool<BS::none> ChunkPool;
 private:
     std::unordered_map<VoxelChunkKey, std::unique_ptr<VoxelChunk>, VoxelChunkKeyHash> _chunks;
     std::unordered_map<VoxelChunkKey, VoxelChunk*, VoxelChunkKeyHash> _chunksToSetup;
@@ -85,9 +88,8 @@ private:
     FrustrumCuller* _frustrumCuller = nullptr;
 
     int _worldSeed = 0;
-    VoxelTerrainGenerator* _terrainGenerator;
-
     const int _chunkViewDistance = 3;
+    VoxelTerrainGenerator* _terrainGenerator;
 };
 
 #endif //VOXELWORLD_H
