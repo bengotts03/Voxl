@@ -40,17 +40,16 @@ public:
 
     void Load();
     void Unload();
+    void Rebuild();
 
     void Render(Shader& shader, Camera& camera);
     bool ShouldRender();
 
-    void CreateMeshData(MeshData& outMeshData);
     void CreateMesh();
 
     BoundingBox* GetBounds();
 
     VoxelBlock* GetVoxelBlock(WorldPosition worldPosition);
-    VoxelBlock* GetVoxelBlock(ChunkPosition chunkPosition);
     VoxelBlock* GetVoxelBlock(LocalVoxelPosition localVoxelPosition);
     VoxelBlock* GetVoxelBlock(LocalVoxelPosition localVoxelPosition, LocalVoxelPosition& voxelBlockPosition);
 
@@ -62,6 +61,8 @@ public:
     ChunkPosition GetChunkPosition();
 private:
     void CreateVoxel(glm::vec3 position, VoxelBlockTextureData textureData, NeighbourStates neighbourStates, MeshData& outMeshData);
+    void CreateMeshData(MeshData& outMeshData);
+
     void RecalculateBounds();
 private:
     Texture ChunkSpriteSheet;

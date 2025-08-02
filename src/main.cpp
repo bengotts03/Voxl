@@ -153,18 +153,12 @@ int main() {
         if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
             RaycastHit outHit{};
             if (world.Raycast(camera->Position, camera->Direction, outHit)) {
-                spdlog::info("Hit: {0},{1},{2}", outHit.WorldPositionHit.Position.x, outHit.WorldPositionHit.Position.y, outHit.WorldPositionHit.Position.z);
-                world.DestroyVoxelBlock(outHit.WorldPositionHit);
-                // world.PlaceVoxelBlock(outHit.WorldPositionHit);
-            }else {
-                spdlog::info("Hit nothing");
+                spdlog::info("Ray Hit: {0},{1},{2}", outHit.WorldPositionHit.Position.x, outHit.WorldPositionHit.Position.y, outHit.WorldPositionHit.Position.z);
+                if (world.DestroyVoxelBlock(outHit.WorldPositionHit))
+                    spdlog::info("DESTROY");
             }
         }
         oldState = newState;
-
-        if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
-            world.UpdateChunksToRender();
-        }
 
         camera->UpdateMatrix(90.0f, 0.1f, 100.0f);
 

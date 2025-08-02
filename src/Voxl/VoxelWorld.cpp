@@ -55,8 +55,7 @@ void VoxelWorld::RebuildChunks() {
     int numberOfChunksToRebuild = 0;
     for (auto& chunk : _chunksToRebuild) {
         if (chunk->ShouldRender() && numberOfChunksToRebuild != CHUNK_FRAME_UPDATE_LIMIT) {
-            // TODO: Add a method in the chunk to rebuild using threading
-            // chunk->CreateMesh();
+            chunk->Rebuild();
 
             numberOfChunksToRebuild++;
         }
@@ -167,28 +166,19 @@ void VoxelWorld::UpdateChunksToRender() {
 
 bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance) {
     glm::vec3 normalizedDir = glm::normalize(direction);
-    float stepSize = VOXEL_SIZE * 0.01f;
+    float stepSize = VOXEL_SIZE * 0.1f;
 
     for (float i = 0; i < maxDistance; i += stepSize) {
         glm::vec3 currentPos = origin + normalizedDir * i;
 
-        // Dividing by voxel size automatically converts xyz to our voxel grid coordinates
-        int x = static_cast<int>(glm::floor(currentPos.x / VOXEL_SIZE));
-        int y = static_cast<int>(glm::floor(currentPos.y / VOXEL_SIZE));
-        int z = static_cast<int>(glm::floor(currentPos.z / VOXEL_SIZE));
+        WorldPosition worldPos = {currentPos};
 
-        WorldPosition worldPos = {glm::vec3(x, y, z)};
         auto chunk = GetChunk(worldPos);
-
         if (chunk == nullptr) {
             continue;
         }
 
-        // ChunkPosition chunkPos = {glm::ivec3(glm::floor(worldPos.Position / (float)CHUNK_SIZE))};
-        ChunkPosition chunkPos = WorldPositionToChunk(worldPos);
-        VoxelPosition voxelPos = WorldPositionToVoxel(worldPos);
         LocalVoxelPosition localVoxelPos = WorldPositionToLocalVoxel(worldPos);
-
         glm::ivec3 pos = localVoxelPos.Position;
 
         if (pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
@@ -196,6 +186,9 @@ bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outH
             auto voxel = chunk->GetVoxelBlock(localVoxelPos);
 
             if (voxel && voxel->IsActive()) {
+                ChunkPosition chunkPos = WorldPositionToChunk(worldPos);
+                VoxelPosition voxelPos = WorldPositionToVoxel(worldPos);
+
                 outHit = RaycastHit(worldPos, chunkPos, voxelPos, localVoxelPos);
                 return true;
             }
@@ -251,7 +244,6 @@ bool VoxelWorld::PlaceVoxelBlock(WorldPosition worldPosition) {
         auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition), voxelPos);
 
         if (voxel->IsActive() == false) {
-
             voxel->SetActive(true);
             _chunksToRebuild.push_back(chunk);
 
@@ -266,7 +258,7 @@ bool VoxelWorld::DestroyVoxelBlock(WorldPosition worldPosition) {
     auto chunk = GetChunk(worldPosition);
 
     if (chunk) {
-        auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition));
+        auto voxel = chunk->GetVoxelBlock(worldPosition);
         if (voxel->IsActive() == true) {
             voxel->SetActive(false);
             _chunksToRebuild.push_back(chunk);

@@ -68,7 +68,7 @@ static ChunkPosition WorldPositionToChunk(WorldPosition worldPosition) {
 }
 
 static VoxelPosition WorldPositionToVoxel(WorldPosition worldPosition) {
-    return {glm::ivec3(worldPosition.Position)};
+    return {glm::ivec3(worldPosition.Position / VOXEL_SIZE)};
 }
 
 static LocalVoxelPosition WorldPositionToLocalVoxel(WorldPosition worldPosition) {

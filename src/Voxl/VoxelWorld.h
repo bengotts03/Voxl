@@ -8,9 +8,7 @@
 
 #define CHUNK_FRAME_UPDATE_LIMIT (int)4
 
-#include "BoundingBox.h"
 #include "BS_thread_pool.hpp"
-#include "FastNoiseLite.h"
 #include "FrustrumCuller.h"
 #include "glm/glm.hpp"
 #include "src/Core/Shader.h"
@@ -51,7 +49,6 @@ public:
     void Init();
     void Update(float deltaTime, glm::vec3 cameraPosition, glm::vec3 cameraView);
 
-    void RenderChunk(VoxelChunk* chunk);
     void RenderWorldAsync();
     void UpdateSetupList();
     void UpdateLoadList();
