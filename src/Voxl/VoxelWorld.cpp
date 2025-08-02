@@ -55,7 +55,7 @@ void VoxelWorld::RebuildChunks() {
     int numberOfChunksToRebuild = 0;
     for (auto& chunk : _chunksToRebuild) {
         if (chunk->ShouldRender() && numberOfChunksToRebuild != CHUNK_FRAME_UPDATE_LIMIT) {
-            chunk->Rebuild();
+            chunk->ForceRebuild();
 
             numberOfChunksToRebuild++;
         }
@@ -238,34 +238,32 @@ VoxelChunk* VoxelWorld::GetChunk(VoxelChunkKey key) {
 
 bool VoxelWorld::PlaceVoxelBlock(WorldPosition worldPosition) {
     auto chunk = GetChunk(worldPosition);
+    if (!chunk)
+        return false;
 
-    if (chunk) {
-        LocalVoxelPosition voxelPos{};
-        auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition), voxelPos);
+    LocalVoxelPosition voxelPos{};
+    auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition), voxelPos);
 
-        if (voxel->IsActive() == false) {
-            voxel->SetActive(true);
-            _chunksToRebuild.push_back(chunk);
+    if (voxel->IsActive() == false)
+        return false;
 
-            return true;
-        }
-    }
+    voxel->SetActive(true);
+    _chunksToRebuild.push_back(chunk);
 
-    return false;
+    return true;
 }
 
 bool VoxelWorld::DestroyVoxelBlock(WorldPosition worldPosition) {
     auto chunk = GetChunk(worldPosition);
+    if (!chunk)
+        return false;
 
-    if (chunk) {
-        auto voxel = chunk->GetVoxelBlock(worldPosition);
-        if (voxel->IsActive() == true) {
-            voxel->SetActive(false);
-            _chunksToRebuild.push_back(chunk);
+    auto voxel = chunk->GetVoxelBlock(worldPosition);
+    if (voxel->IsActive() == false)
+        return false;
 
-            return true;
-        }
-    }
+    voxel->SetActive(false);
+    _chunksToRebuild.push_back(chunk);
 
-    return false;
+    return true;
 }

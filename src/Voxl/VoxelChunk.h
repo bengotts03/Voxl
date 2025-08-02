@@ -40,7 +40,7 @@ public:
 
     void Load();
     void Unload();
-    void Rebuild();
+    void ForceRebuild();
 
     void Render(Shader& shader, Camera& camera);
     bool ShouldRender();
