@@ -14,7 +14,7 @@
 
 void Application::Start() {
     _window = std::make_unique<Window>(SCREEN_WIDTH, SCREEN_HEIGHT);
-    _camera = std::make_unique<Camera>(SCREEN_WIDTH, SCREEN_HEIGHT, glm::vec3(0, 0, -2));
+    _camera = std::make_unique<Camera>(SCREEN_WIDTH, SCREEN_HEIGHT, glm::vec3(0, 2, 0));
     _appShader = std::make_unique<Shader>("../assets/shaders/default.vert", "../assets/shaders/default.frag");
 
     _world = std::make_unique<VoxelWorld>(*_appShader, *_camera, 0);

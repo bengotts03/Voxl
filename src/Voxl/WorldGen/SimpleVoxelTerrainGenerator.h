@@ -5,7 +5,7 @@
 #ifndef SIMPLEVOXELTERRAINGENERATOR_H
 #define SIMPLEVOXELTERRAINGENERATOR_H
 
-#include "VoxelPositioning.h"
+#include "../VoxelPositioning.h"
 #include "VoxelTerrainGenerator.h"
 
 class SimpleVoxelTerrainGenerator : public VoxelTerrainGenerator {

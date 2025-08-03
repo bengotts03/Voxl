@@ -14,7 +14,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/vector_angle.hpp>
-#include "Shader.h"
+#include "../Rendering/Shader.h"
 
 class Camera {
 public:

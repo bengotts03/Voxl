@@ -8,7 +8,7 @@
 
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
-#include "SimpleVoxelTerrainGenerator.h"
+#include "WorldGen/SimpleVoxelTerrainGenerator.h"
 #include "BS_thread_pool.hpp"
 
 BS::thread_pool<BS::none> VoxelWorld::ChunkPool = BS::thread_pool<BS::none>(CHUNK_FRAME_UPDATE_LIMIT);

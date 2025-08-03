@@ -1,5 +1,4 @@
 #include "Shader.h"
-
 #include <glm/gtc/type_ptr.hpp>
 
 // Reads a text file and outputs a string with everything in the text file

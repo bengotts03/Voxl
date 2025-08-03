@@ -7,7 +7,7 @@
 
 #include <vector>
 #include "FastNoiseLite.h"
-#include "VoxelBlock.h"
+#include "../VoxelBlock.h"
 
 struct ChunkPosition;
 

@@ -4,7 +4,7 @@
 
 #include "FrustrumCuller.h"
 #include <spdlog/spdlog.h>
-#include "BoundingBox.h"
+#include "../Voxl/BoundingBox.h"
 
 FrustrumCuller::FrustrumCuller(Camera& cam, float aspectRatio, float fov, float zNear, float zFar) : _camera(cam)
 {

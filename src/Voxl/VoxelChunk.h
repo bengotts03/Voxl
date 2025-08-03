@@ -13,12 +13,12 @@
 #include "BoundingBox.h"
 #include "glad/glad.h"
 #include "src/Core/Camera.h"
-#include "src/Core/Mesh.h"
-#include "src/Core/Texture.h"
-#include "src/Core/VertexBuffer.h"
+#include "../Rendering/Mesh.h"
+#include "../Rendering/Texture.h"
+#include "../Rendering/VertexBuffer.h"
 #include "VoxelBlock.h"
 #include "VoxelPositioning.h"
-#include "VoxelTerrainGenerator.h"
+#include "WorldGen/VoxelTerrainGenerator.h"
 #include "VoxelWorld.h"
 
 struct NeighbourStates {

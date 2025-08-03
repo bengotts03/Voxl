@@ -7,8 +7,8 @@
 
 #include "VertexArray.h"
 #include "IndexBuffer.h"
-#include "Texture.h"
-#include "Camera.h"
+#include "../Rendering/Texture.h"
+#include "../Core/Camera.h"
 #include "VertexBuffer.h"
 
 class Mesh {

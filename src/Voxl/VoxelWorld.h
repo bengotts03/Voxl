@@ -9,13 +9,13 @@
 #define CHUNK_FRAME_UPDATE_LIMIT (int)4
 
 #include "BS_thread_pool.hpp"
-#include "FrustrumCuller.h"
+#include "../Rendering/FrustrumCuller.h"
 #include "glm/glm.hpp"
-#include "src/Core/Shader.h"
+#include "../Rendering/Shader.h"
 #include "src/Core/Camera.h"
 #include "VoxelChunk.h"
 #include "VoxelPositioning.h"
-#include "VoxelTerrainGenerator.h"
+#include "WorldGen/VoxelTerrainGenerator.h"
 #include "src/Physics/Physics.h"
 
 struct VoxelChunkKey {

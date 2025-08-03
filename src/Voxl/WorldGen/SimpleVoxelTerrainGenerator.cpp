@@ -4,7 +4,7 @@
 
 #include "SimpleVoxelTerrainGenerator.h"
 
-#include "VoxelChunk.h"
+#include "../VoxelChunk.h"
 
 void SimpleVoxelTerrainGenerator::GenerateTerrainNoise() {
     _terrainNoise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);

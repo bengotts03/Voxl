@@ -7,7 +7,7 @@
 
 #include <glm/glm.hpp>
 #include "src/Core/Camera.h"
-#include "BoundingBox.h"
+#include "../Voxl/BoundingBox.h"
 
 class FrustrumCuller {
 public:
