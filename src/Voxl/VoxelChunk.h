@@ -19,6 +19,7 @@
 #include "VoxelBlock.h"
 #include "VoxelPositioning.h"
 #include "VoxelTerrainGenerator.h"
+#include "VoxelWorld.h"
 
 struct NeighbourStates {
     bool xNeg, xPos, yNeg, yPos, zNeg, zPos;
@@ -30,6 +31,7 @@ struct MeshData {
     std::vector<Texture> MeshTextures;
 };
 
+struct RaycastHit;
 class VoxelChunk {
 public:
     VoxelChunk();

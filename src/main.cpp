@@ -8,6 +8,7 @@
 #include "Core/Mesh.h"
 #include "Core/Texture.h"
 #include "Core/VertexBuffer.h"
+#include "Physics/Physics.h"
 #include "Voxl/VoxelWorld.h"
 
 GLFWwindow* window;
@@ -93,10 +94,10 @@ int main() {
     };
     unsigned int skyboxIndices[] = {
         // Front face
-        0, 1, 2,   2, 3, 0,
+        0, 1, 2, 2, 3, 0,
 
         // Back face
-        4, 5, 6,   6, 7, 4,
+        4, 5, 6, 6, 7, 4,
 
         // Left face
         8, 9, 10,  10, 11, 8,
@@ -117,6 +118,7 @@ int main() {
     Mesh skybox(skyboxVerts, skyboxInds, skyboxTex);
 
     VoxelWorld world(shader, *camera, 0);
+    Physics physics(&world);
 
     double curTime = 0.0;
     double prevTime = 0.0;
@@ -152,10 +154,11 @@ int main() {
         int newState = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
         if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
             RaycastHit outHit{};
-            if (world.Raycast(camera->Position, camera->Direction, outHit)) {
+            if (Physics::Raycast(camera->Position, camera->Direction, 100.0f, outHit)) {
                 spdlog::info("Ray Hit: {0},{1},{2}", outHit.WorldPositionHit.Position.x, outHit.WorldPositionHit.Position.y, outHit.WorldPositionHit.Position.z);
-                if (world.DestroyVoxelBlock(outHit.WorldPositionHit))
-                    spdlog::info("DESTROY");
+
+                // world.DestroyVoxelBlock(outHit.WorldPositionHit);
+                world.PlaceVoxelBlock(outHit);
             }
         }
         oldState = newState;

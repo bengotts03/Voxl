@@ -16,13 +16,7 @@
 #include "VoxelChunk.h"
 #include "VoxelPositioning.h"
 #include "VoxelTerrainGenerator.h"
-
-struct RaycastHit {
-    WorldPosition WorldPositionHit{};
-    ChunkPosition ChunkPositionHit{};
-    VoxelPosition VoxelPositionHit{};
-    LocalVoxelPosition LocalVoxelPositionHit{};
-};
+#include "src/Physics/Physics.h"
 
 struct VoxelChunkKey {
     int x;
@@ -40,6 +34,8 @@ struct VoxelChunkKeyHash {
 };
 
 class VoxelChunk;
+class Physics;
+
 class VoxelWorld {
 public:
     VoxelWorld(Shader& shader, Camera& camera);
@@ -57,13 +53,11 @@ public:
     void UpdateChunksToRender();
     void RebuildChunks();
 
-    bool Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance = 100.0f);
-
     VoxelChunk* GetChunk(WorldPosition worldPosition);
     VoxelChunk* GetChunk(ChunkPosition chunkPosition);
     VoxelChunk* GetChunk(VoxelChunkKey key);
 
-    bool PlaceVoxelBlock(WorldPosition worldPosition);
+    bool PlaceVoxelBlock(RaycastHit hit);
     bool DestroyVoxelBlock(WorldPosition worldPosition);
 public:
     static BS::thread_pool<BS::none> ChunkPool;

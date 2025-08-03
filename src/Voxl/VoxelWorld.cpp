@@ -8,7 +8,6 @@
 
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
-#include "FastNoiseLite.h"
 #include "SimpleVoxelTerrainGenerator.h"
 #include "BS_thread_pool.hpp"
 
@@ -164,40 +163,6 @@ void VoxelWorld::UpdateChunksToRender() {
     }
 }
 
-bool VoxelWorld::Raycast(glm::vec3 origin, glm::vec3 direction, RaycastHit& outHit, float maxDistance) {
-    glm::vec3 normalizedDir = glm::normalize(direction);
-    float stepSize = VOXEL_SIZE * 0.1f;
-
-    for (float i = 0; i < maxDistance; i += stepSize) {
-        glm::vec3 currentPos = origin + normalizedDir * i;
-
-        WorldPosition worldPos = {currentPos};
-
-        auto chunk = GetChunk(worldPos);
-        if (chunk == nullptr) {
-            continue;
-        }
-
-        LocalVoxelPosition localVoxelPos = WorldPositionToLocalVoxel(worldPos);
-        glm::ivec3 pos = localVoxelPos.Position;
-
-        if (pos.x >= 0 && pos.y >= 0 && pos.z >= 0 &&
-            pos.x < CHUNK_SIZE && pos.y < CHUNK_SIZE && pos.z < CHUNK_SIZE) {
-            auto voxel = chunk->GetVoxelBlock(localVoxelPos);
-
-            if (voxel && voxel->IsActive()) {
-                ChunkPosition chunkPos = WorldPositionToChunk(worldPos);
-                VoxelPosition voxelPos = WorldPositionToVoxel(worldPos);
-
-                outHit = RaycastHit(worldPos, chunkPos, voxelPos, localVoxelPos);
-                return true;
-            }
-        }
-    }
-
-    return false;
-}
-
 VoxelChunk* VoxelWorld::GetChunk(WorldPosition worldPosition) {
     auto chunkPos = WorldPositionToChunk(worldPosition);
 
@@ -236,18 +201,30 @@ VoxelChunk* VoxelWorld::GetChunk(VoxelChunkKey key) {
     return nullptr;
 }
 
-bool VoxelWorld::PlaceVoxelBlock(WorldPosition worldPosition) {
-    auto chunk = GetChunk(worldPosition);
+bool VoxelWorld::PlaceVoxelBlock(RaycastHit hit) {
+    auto chunk = GetChunk(hit.WorldPositionHit);
     if (!chunk)
         return false;
 
     LocalVoxelPosition voxelPos{};
-    auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(worldPosition), voxelPos);
+    auto voxel = chunk->GetVoxelBlock(WorldPositionToLocalVoxel(hit.WorldPositionHit), voxelPos);
 
     if (voxel->IsActive() == false)
         return false;
 
-    voxel->SetActive(true);
+
+    glm::vec3 normal = hit.HitNormal;
+    auto voxelPlacementPos = glm::vec3(voxelPos.Position) + normal;
+
+    if (!chunk->GetVoxelBlock(WorldPositionToLocalVoxel(voxelPlacementPos)))
+        return false;
+
+    auto newVoxel = chunk->GetVoxelBlock(LocalVoxelPosition(voxelPlacementPos));
+
+    if (newVoxel == nullptr || newVoxel->IsActive() == true)
+        return false;
+
+    newVoxel->SetActive(true);
     _chunksToRebuild.push_back(chunk);
 
     return true;
