@@ -4,6 +4,7 @@
 
 #include "Camera.h"
 
+#include "Input.h"
 #include "Time.h"
 
 Camera::Camera(int width, int height, glm::vec3 pos) : _width(width), _height(height), Position(pos) {
@@ -44,34 +45,27 @@ void Camera::UpdateMatrix(float FOV, float nearPane, float farPane) {
 }
 
 void Camera::HandleInput(GLFWwindow *window) {
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    if (Input::GetKeyHold(KeyCode::W)) {
         Position += _speed * Direction * (float)Time::DeltaTime;
     }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    if (Input::GetKeyHold(KeyCode::A)) {
         Position += _speed * -Right * (float)Time::DeltaTime;
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    if (Input::GetKeyHold(KeyCode::S)) {
         Position += _speed * -Direction * (float)Time::DeltaTime;
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    if (Input::GetKeyHold(KeyCode::D)) {
         Position += _speed * Right * (float)Time::DeltaTime;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+    if (Input::GetKeyHold(KeyCode::SPACE)) {
         Position += _speed * Up * (float)Time::DeltaTime;
     }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+    if (Input::GetKeyHold(KeyCode::LEFT_CONTROL)) {
         Position += _speed * -Up * (float)Time::DeltaTime;
     }
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        _speed = 6.0f;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
-       _speed = 2.0f;
-    }
-
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    if (Input::GetMouseButtonHold(MouseButton::RIGHT)) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
         if (_firstClick) {
@@ -99,8 +93,9 @@ void Camera::HandleInput(GLFWwindow *window) {
 
         glfwSetCursorPos(window, (_width / 2), (_height / 2));
     }
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+    if (Input::GetMouseButtonUp(MouseButton::RIGHT)) {
         _firstClick = true;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
 }

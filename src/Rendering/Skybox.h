@@ -4,8 +4,8 @@
 
 #ifndef SKYBOX_H
 #define SKYBOX_H
-#include "../Rendering/Mesh.h"
-#include "../Rendering/Shader.h"
+#include "Mesh.h"
+#include "Shader.h"
 
 class Skybox {
 public:

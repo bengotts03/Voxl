@@ -6,8 +6,9 @@
 
 #include <spdlog/spdlog.h>
 
+#include "Input.h"
 #include "Performance.h"
-#include "Skybox.h"
+#include "../Rendering/Skybox.h"
 #include "src/Voxl/VoxelWorld.h"
 
 #define SCREEN_WIDTH 800
@@ -21,6 +22,7 @@ void Application::Start() {
     _world = std::make_unique<VoxelWorld>(*_appShader, *_camera, 0);
     _skybox = std::make_unique<Skybox>(_camera.get());
 
+    Input(_window.get());
     Physics physics(_world.get());
 
     Time();
@@ -32,6 +34,7 @@ static int oldState = GLFW_RELEASE;
 void Application::Update() {
     Time::Update();
     Performance::Update();
+    Input::UpdateStates();
 
     glClearColor(0.0, 0.2, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -40,14 +43,13 @@ void Application::Update() {
 
     _camera->HandleInput(_window->GetNativeWindow());
 
-    int newState = glfwGetMouseButton(_window->GetNativeWindow(), GLFW_MOUSE_BUTTON_LEFT);
-    if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
-        RaycastHit outHit{};
+    if (Input::GetMouseButtonDown(MouseButton::LEFT)) {
+        RaycastHit outHit;
+
         if (Physics::Raycast(_camera->Position, _camera->Direction, 100.0f, outHit)) {
             _world->PlaceVoxelBlock(outHit);
         }
     }
-    oldState = newState;
 
     _camera->UpdateMatrix(90.0f, 0.1f, 100.0f);
 

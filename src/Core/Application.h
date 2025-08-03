@@ -4,11 +4,11 @@
 
 #ifndef APPLICATION_H
 #define APPLICATION_H
-#include "Camera.h"
-#include "Skybox.h"
-#include "Time.h"
 #include "Window.h"
+#include "Camera.h"
+#include "src/Rendering/Skybox.h"
 #include "src/Voxl/VoxelWorld.h"
+#include "Time.h"
 
 class Application {
 public:

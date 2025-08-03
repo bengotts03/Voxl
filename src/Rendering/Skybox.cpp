@@ -3,9 +3,8 @@
 //
 
 #include "Skybox.h"
-
-#include "../Rendering/Texture.h"
-#include "../Rendering/VertexBuffer.h"
+#include "Texture.h"
+#include "VertexBuffer.h"
 
 Skybox::Skybox(Camera* camera) : _camera(camera) {
     _shader = new Shader("../assets/shaders/skybox.vert", "../assets/shaders/skybox.frag");
