@@ -6,6 +6,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "Performance.h"
 #include "Skybox.h"
 #include "src/Voxl/VoxelWorld.h"
 
@@ -20,35 +21,24 @@ void Application::Start() {
     _world = std::make_unique<VoxelWorld>(*_appShader, *_camera, 0);
     _skybox = std::make_unique<Skybox>(_camera.get());
 
-    Physics physics = Physics(_world.get());
-}
+    Physics physics(_world.get());
 
-double curTime = 0.0;
-double prevTime = 0.0;
-double timeDiff;
-unsigned int fpsCounter = 0;
+    Time();
+    Performance();
+}
 
 static int oldState = GLFW_RELEASE;
 
 void Application::Update() {
-    curTime = glfwGetTime();
-    timeDiff = curTime - prevTime;
-    fpsCounter++;
-    if (timeDiff >= 1.0 / 30.0) {
-        std::string fps = std::to_string((1.0 / timeDiff) * fpsCounter);
-        std::string ms = std::to_string((timeDiff / fpsCounter) * 1000);
-        std::string newTitle = "Voxl - " + fps + "FPS / " + ms + "ms";
-
-        glfwSetWindowTitle(_window->GetNativeWindow(), newTitle.c_str());
-
-        prevTime = curTime;
-        fpsCounter = 0;
-
-        _camera->HandleInput(_window->GetNativeWindow());
-    }
+    Time::Update();
+    Performance::Update();
 
     glClearColor(0.0, 0.2, 0.3, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    DisplayPerformanceStats();
+
+    _camera->HandleInput(_window->GetNativeWindow());
 
     int newState = glfwGetMouseButton(_window->GetNativeWindow(), GLFW_MOUSE_BUTTON_LEFT);
     if (newState == GLFW_RELEASE && oldState == GLFW_PRESS) {
@@ -66,7 +56,7 @@ void Application::Update() {
 
     // WORLD
     _appShader->Activate();
-    _world->Update(curTime / 1.0f, _camera->Position, _camera->Direction);
+    _world->Update(Time::NormalTime / 1.0f, _camera->Position, _camera->Direction);
 
     glfwSwapBuffers(_window->GetNativeWindow());
     glfwPollEvents();
@@ -82,4 +72,12 @@ Window& Application::GetWindow() {
 
 Camera& Application::GetCamera() {
     return *_camera;
+}
+
+void Application::DisplayPerformanceStats() {
+    std::string fps = std::to_string(Performance::AverageFPS);
+    std::string ms = std::to_string(Performance::MS);
+
+    std::string newTitle = "Voxl - " + fps + "FPS / " + ms + "ms";
+    glfwSetWindowTitle(_window->GetNativeWindow(), newTitle.c_str());
 }

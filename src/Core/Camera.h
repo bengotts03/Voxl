@@ -40,7 +40,7 @@ public:
 private:
     float _width;
     float _height;
-    float _speed = 0.1f;
+    float _speed = 2.0f;
     float _lookSensitivity = 100.0f;
     bool _firstClick;
 };

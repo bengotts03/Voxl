@@ -4,6 +4,8 @@
 
 #include "Camera.h"
 
+#include "Time.h"
+
 Camera::Camera(int width, int height, glm::vec3 pos) : _width(width), _height(height), Position(pos) {
     Right = glm::normalize(glm::cross(Direction, Up));
     Forward = Direction;
@@ -43,30 +45,30 @@ void Camera::UpdateMatrix(float FOV, float nearPane, float farPane) {
 
 void Camera::HandleInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        Position += _speed * Direction;
+        Position += _speed * Direction * (float)Time::DeltaTime;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        Position += _speed * -Right;
+        Position += _speed * -Right * (float)Time::DeltaTime;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        Position += _speed * -Direction;
+        Position += _speed * -Direction * (float)Time::DeltaTime;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        Position += _speed * Right;
+        Position += _speed * Right * (float)Time::DeltaTime;
     }
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        Position += _speed * Up;
+        Position += _speed * Up * (float)Time::DeltaTime;
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        Position += _speed * -Up;
+        Position += _speed * -Up * (float)Time::DeltaTime;
     }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        _speed = 0.3f;
+        _speed = 6.0f;
     }
     else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE) {
-       _speed = 0.1f;
+       _speed = 2.0f;
     }
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {

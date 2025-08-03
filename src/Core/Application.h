@@ -6,6 +6,7 @@
 #define APPLICATION_H
 #include "Camera.h"
 #include "Skybox.h"
+#include "Time.h"
 #include "Window.h"
 #include "src/Voxl/VoxelWorld.h"
 
@@ -17,6 +18,8 @@ public:
 
     Window& GetWindow();
     Camera& GetCamera();
+private:
+    void DisplayPerformanceStats();
 private:
     std::unique_ptr<Window> _window;
     std::unique_ptr<Camera> _camera;
