@@ -2,8 +2,7 @@
 #include "GLFW/glfw3.h"
 
 int main() {
-    Application app;
-
+    Application app = Application();
     app.Start();
 
     while (!glfwWindowShouldClose(app.GetWindow().GetNativeWindow()))

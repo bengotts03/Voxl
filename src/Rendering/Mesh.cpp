@@ -30,8 +30,7 @@ Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vec
     indexBufferObject.Unbind();
 }
 
-void Mesh::Draw(Shader &shader, Camera &camera)
-{
+void Mesh::Draw(Shader& shader, Camera& camera, ProjectionMethod projectionMethod) {
     shader.Activate();
     _vertexArrayObject.Bind();
 
@@ -53,47 +52,19 @@ void Mesh::Draw(Shader &shader, Camera &camera)
         _textures[i].Bind();
     }
 
-    camera.CalculateMatrix(shader, "cameraMatrix");
-
-    auto model = glm::mat4(1);
-    model = glm::translate(model, Position);
-
-    shader.SetUniformMatrix4("model", model);
-
-    glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
-}
-
-void Mesh::DrawViewProj(Shader &shader, Camera &camera) {
-    shader.Activate();
-    _vertexArrayObject.Bind();
-
-    unsigned int numberOfDiffuse = 0;
-    unsigned int numberOfSpecular = 0;
-
-    for (int i = 0; i < _textures.size(); ++i) {
-        std::string num;
-        std::string type = _textures[i].Type;
-
-        if (type == "diffuse") {
-            num = std::to_string(numberOfDiffuse++);
-        }
-        else if (type == "specular") {
-            num = std::to_string(numberOfSpecular++);
-        }
-
-        _textures[i].TextureUnit(shader, (type + num).c_str(), i);
-        _textures[i].Bind();
+    if (projectionMethod == ProjectionMethod::Together)
+        camera.CalculateMatrix(shader, "cameraMatrix");
+    else if (projectionMethod == ProjectionMethod::Separate){
+        shader.SetUniformMatrix4("view", camera.GetView());
+        shader.SetUniformMatrix4("projection", camera.GetProjection());
     }
 
-    shader.SetUniformMatrix4("view", camera.GetView());
-    shader.SetUniformMatrix4("projection", camera.GetProjection());
-
     auto model = glm::mat4(1);
     model = glm::translate(model, Position);
 
     shader.SetUniformMatrix4("model", model);
 
-    glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(_drawMode, _indices.size(), GL_UNSIGNED_INT, 0);
 }
 
 int Mesh::GetNumVerts() const {
@@ -102,4 +73,8 @@ int Mesh::GetNumVerts() const {
 
 int Mesh::GetNumIndices() const {
     return static_cast<int>(_indices.size());
+}
+
+void Mesh::SetCustomDrawMode(int drawMode) {
+    _drawMode = drawMode;
 }

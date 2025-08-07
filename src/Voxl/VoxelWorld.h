@@ -6,7 +6,7 @@
 #ifndef VOXELWORLD_H
 #define VOXELWORLD_H
 
-#define CHUNK_FRAME_UPDATE_LIMIT (int)4
+#define CHUNK_FRAME_UPDATE_LIMIT (int)1
 
 #include "BS_thread_pool.hpp"
 #include "../Rendering/FrustrumCuller.h"

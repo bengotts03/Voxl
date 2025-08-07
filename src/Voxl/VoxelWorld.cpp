@@ -5,13 +5,12 @@
 #include "VoxelWorld.h"
 
 #include <future>
-
 #include "VoxelChunk.h"
 #include <spdlog/spdlog.h>
 #include "WorldGen/SimpleVoxelTerrainGenerator.h"
 #include "BS_thread_pool.hpp"
 
-BS::thread_pool<BS::none> VoxelWorld::ChunkPool = BS::thread_pool<BS::none>(CHUNK_FRAME_UPDATE_LIMIT);
+BS::thread_pool<BS::none> VoxelWorld::ChunkPool = BS::thread_pool<BS::none>(4);
 
 VoxelWorld::VoxelWorld(Shader& shader, Camera& camera): _shader(shader), _camera(camera){
     Init();
@@ -187,7 +186,7 @@ VoxelChunk* VoxelWorld::GetChunk(ChunkPosition chunkPosition) {
         return iterator->second.get();
     }
 
-    spdlog::warn("Chunk not found at: {0},{1}", chunkPosition.Position.x, chunkPosition.Position.z);
+    // spdlog::warn("Chunk not found at: {0},{1}", chunkPosition.Position.x, chunkPosition.Position.z);
     return nullptr;
 }
 
@@ -212,7 +211,6 @@ bool VoxelWorld::PlaceVoxelBlock(RaycastHit hit) {
     if (voxel->IsActive() == false)
         return false;
 
-
     glm::vec3 normal = hit.HitNormal;
     auto voxelPlacementPos = glm::vec3(voxelPos.Position) + normal;
 
@@ -224,7 +222,9 @@ bool VoxelWorld::PlaceVoxelBlock(RaycastHit hit) {
     if (newVoxel == nullptr || newVoxel->IsActive() == true)
         return false;
 
+    newVoxel->SetBlockType(BLOCK_TYPE_STONE);
     newVoxel->SetActive(true);
+
     _chunksToRebuild.push_back(chunk);
 
     return true;

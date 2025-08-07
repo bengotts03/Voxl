@@ -67,24 +67,12 @@ void Physics::CalculateHitNormal(RaycastHit& hit) {
     glm::vec3 absHit = glm::abs(localHit);
 
     if (absHit.y >= absHit.x && absHit.y >= absHit.z) {
-        if (localHit.y > 0) {
-            hit.HitNormal = glm::vec3(0.0f, 1.0f, 0.0f);
-        } else {
-            hit.HitNormal = glm::vec3(0.0f, -1.0f, 0.0f);
-        }
+        hit.HitNormal = localHit.y > 0 ? glm::vec3(0.0f, 1.0f, 0.0f) : glm::vec3(0.0f, -1.0f, 0.0f);
     }
     else if (absHit.x >= absHit.z) {
-        if (localHit.x > 0) {
-            hit.HitNormal = glm::vec3(1.0f, 0.0f, 0.0f);
-        } else {
-            hit.HitNormal = glm::vec3(-1.0f, 0.0f, 0.0f);
-        }
+        hit.HitNormal = localHit.x > 0 ? glm::vec3(1.0f, 0.0f, 0.0f) : glm::vec3(-1.0f, 0.0f, -0.0f);
     }
     else {
-        if (localHit.z > 0) {
-            hit.HitNormal = glm::vec3(0.0f, 0.0f, 1.0f);
-        } else {
-            hit.HitNormal = glm::vec3(0.0f, 0.0f, -1.0f);
-        }
+        hit.HitNormal = localHit.z > 0 ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 0.0f, -1.0f);
     }
 }

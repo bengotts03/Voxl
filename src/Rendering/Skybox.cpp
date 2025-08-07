@@ -79,7 +79,7 @@ void Skybox::Render() {
     glCullFace(GL_FRONT);
 
     _shader->Activate();
-    _mesh->DrawViewProj(*_shader, *_camera);
+    _mesh->Draw(*_shader, *_camera, Separate);
 
     glCullFace(GL_BACK);
     glDepthMask(GL_TRUE);

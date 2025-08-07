@@ -11,15 +11,21 @@
 #include "../Core/Camera.h"
 #include "VertexBuffer.h"
 
+enum ProjectionMethod {
+    Together,
+    Separate
+};
+
 class Mesh {
 public:
     Mesh(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, std::vector<Texture>& textures);
 
-    void Draw(Shader& shader, Camera& camera);
-    void DrawViewProj(Shader& shader, Camera& camera);
+    void Draw(Shader& shader, Camera& camera, ProjectionMethod projectionMethod);
 
     int GetNumVerts() const;
     int GetNumIndices() const;
+
+    void SetCustomDrawMode(int drawMode);
 
     glm::vec3 Position = glm::vec3(0, 0, 0);
 private:
@@ -28,6 +34,8 @@ private:
     std::vector<Texture> _textures;
 
     VertexArray _vertexArrayObject;
+
+    int _drawMode = GL_TRIANGLES;
 };
 
 #endif //MESH_H

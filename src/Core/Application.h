@@ -9,6 +9,7 @@
 #include "src/Rendering/Skybox.h"
 #include "src/Voxl/VoxelWorld.h"
 #include "Time.h"
+#include "src/Rendering/Crosshair.h"
 
 class Application {
 public:
@@ -27,6 +28,8 @@ private:
 
     std::unique_ptr<VoxelWorld> _world;
     std::unique_ptr<Skybox> _skybox;
+
+    static Window* AppWindow;
 };
 
 #endif //APPLICATION_H

@@ -7,9 +7,11 @@
 #include "Input.h"
 #include "Time.h"
 
-Camera::Camera(int width, int height, glm::vec3 pos) : _width(width), _height(height), Position(pos) {
+Camera::Camera(Window* window, int width, int height, glm::vec3 pos) : _window(window), _width(width), _height(height), Position(pos) {
     Right = glm::normalize(glm::cross(Direction, Up));
     Forward = Direction;
+
+    glfwSetInputMode(_window->GetNativeWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 }
 
 void Camera::CalculateMatrix(Shader& shader, const char* uniform) {
@@ -44,58 +46,51 @@ void Camera::UpdateMatrix(float FOV, float nearPane, float farPane) {
     CameraMatrix = projection * view;
 }
 
-void Camera::HandleInput(GLFWwindow *window) {
+void Camera::HandleInput() {
     if (Input::GetKeyHold(KeyCode::W)) {
-        Position += _speed * Direction * (float)Time::DeltaTime;
+        HandleMovement(Direction);
     }
     if (Input::GetKeyHold(KeyCode::A)) {
-        Position += _speed * -Right * (float)Time::DeltaTime;
+        HandleMovement(-Right);
     }
     if (Input::GetKeyHold(KeyCode::S)) {
-        Position += _speed * -Direction * (float)Time::DeltaTime;
+        HandleMovement(-Direction);
     }
     if (Input::GetKeyHold(KeyCode::D)) {
-        Position += _speed * Right * (float)Time::DeltaTime;
+        HandleMovement(Right);
     }
 
     if (Input::GetKeyHold(KeyCode::SPACE)) {
-        Position += _speed * Up * (float)Time::DeltaTime;
+        HandleMovement(Up);
     }
     if (Input::GetKeyHold(KeyCode::LEFT_CONTROL)) {
-        Position += _speed * -Up * (float)Time::DeltaTime;
+        HandleMovement(-Up);
     }
 
-    if (Input::GetMouseButtonHold(MouseButton::RIGHT)) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    HandleRotation();
+    glfwSetCursorPos(_window->GetNativeWindow(), (_width / 2), (_height / 2));
+}
 
-        if (_firstClick) {
-            glfwSetCursorPos(window, (_width / 2), (_height / 2));
-            _firstClick = false;
-        }
+void Camera::HandleMovement(glm::vec3 movementDirection) {
+    Position += movementDirection * _speed * static_cast<float>(Time::DeltaTime);
+}
 
-        double mouseX;
-        double mouseY;
-        glfwGetCursorPos(window, &mouseX, &mouseY);
+void Camera::HandleRotation() {
+    double mouseX;
+    double mouseY;
+    glfwGetCursorPos(_window->GetNativeWindow(), &mouseX, &mouseY);
 
-        float rotationX = _lookSensitivity * (float)(mouseY - (_height / 2)) / _height;
-        float rotationY = _lookSensitivity * (float)(mouseX - (_width / 2)) / _width;
+    float rotationX = _lookSensitivity * (float)(mouseY - (_height / 2)) / _height;
+    float rotationY = _lookSensitivity * (float)(mouseX - (_width / 2)) / _width;
 
-        glm::vec3 newDirection = glm::rotate(Direction, glm::radians(-rotationX), Right);
+    glm::vec3 newDirection = glm::rotate(Direction, glm::radians(-rotationX), Right);
 
-        if (!((glm::angle(newDirection, Up) <= glm::radians(5.0f)) or (glm::angle(newDirection, -Up) <= glm::radians(5.0f)))){
-            Direction = newDirection;
-        }
-
-        Direction = glm::rotate(Direction, glm::radians(-rotationY), Up);
-
-        Right = glm::normalize(glm::cross(Direction, Up));
-        Forward = Direction;
-
-        glfwSetCursorPos(window, (_width / 2), (_height / 2));
+    if (!((glm::angle(newDirection, Up) <= glm::radians(5.0f)) or (glm::angle(newDirection, -Up) <= glm::radians(5.0f)))){
+        Direction = newDirection;
     }
 
-    if (Input::GetMouseButtonUp(MouseButton::RIGHT)) {
-        _firstClick = true;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-    }
+    Direction = glm::rotate(Direction, glm::radians(-rotationY), Up);
+
+    Right = glm::normalize(glm::cross(Direction, Up));
+    Forward = Direction;
 }

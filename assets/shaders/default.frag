@@ -6,7 +6,7 @@ in vec3 Colour;
 in vec2 TextureCoords;
 in vec3 Normals;
 
-uniform sampler2D diffuse0;
+uniform sampler2D diffuse1;
 uniform vec3 cameraPosition;
 
 vec4 DirectionalLighting(){
@@ -25,7 +25,7 @@ vec4 DirectionalLighting(){
     float specularAmount = pow(max(dot(viewDir, reflectionDirection), 0.0f), 32.0f);
     float specular = specularStrength * specularAmount;
 
-    return (texture(diffuse0, TextureCoords) * (diffuse + ambient + specular)) * vec4(Colour, 1.0f) * lightColour;
+    return (texture(diffuse1, TextureCoords) * (diffuse + ambient + specular)) * vec4(Colour, 1.0f) * lightColour;
 }
 
 void main()
